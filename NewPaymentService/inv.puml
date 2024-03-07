@@ -1,0 +1,106 @@
+@startuml
+namespace Invoices {
+entity cancel_accounting_money_invoice {
+Отмена инвойса
+==
+* id : uuid
+* invoice_id : uuid
+* turnovers_invoice_id : uuid
+* turnovers_client_account_id : uuid
+* amount : number
+* currency : string(enum)
+* create_timestamp : date_time
+}
+entity accounting_incoming_money_invoice {
+Отнесение входящих средств на инвойс
+==
+* id : uuid
+* invoice_id : uuid
+* incoming_payment_document_psbr_id : uuid
+* turnovers_invoice_id : uuid
+* create_timestamp : date_time
+}
+
+entity accounting_outgoing_money_invoice {
+Отнесение Исходящих средств на инвойс
+==
+* id : uuid
+* invoice_id : uuid
+* outgoing_payment_document_psbr_id : uuid
+* turnovers_invoice_id : uuid
+* create_timestamp : date_time
+}
+entity invoice {
+Инвойс\счет на оплату
+==
+* id : uuid
+==
+* customer_id : uuid
+==
+  outgoing_document_id : uuid
+  outgoing_document_type : enum (PSBR)
+==
+  wallet_incoming_id : uuid
+==
+* ttl : date
+* amount :
+* currency :
+* status : enum
+}
+
+entity invoice_income {
+Поступления на счет на оплату
+==
+* id : uuid
+==
+* document_id : uuid
+* document_type : enum
+
+==
+* invoice_id : uuid
+* amount :
+* create_timestamp : date_time
+}
+
+
+
+
+entity turnovers_invoice {
+Обороты по счету на оплату
+==
+* id : uuid
+==
+* invoice_id : uuid
+* direction : enum
+* amount :
+* currency :
+* create_timestamp : date_time
+}
+}
+
+entity clients_domain{
+Домен клиентских средств
+==
+turnovers_client_account : Обороты по кошелькам клиентов
+accounting_outgoing_money_client : Списание средств с кошелька
+
+}
+
+entity core_account_domain{
+Домен корневых счетов
+==
+outgoing_payment_document : Исходящий платежный документ
+incoming_payment_document : Входящий платежный документ
+}
+
+cancel_accounting_money_invoice::turnovers_invoice_id ||--|| turnovers_invoice::id #red
+accounting_incoming_money_invoice::turnovers_invoice_id ||--|| turnovers_invoice::id #green
+accounting_outgoing_money_invoice::turnovers_invoice_id ||--|| turnovers_invoice::id #green
+invoice::id ||--o{ turnovers_invoice::invoice_id
+
+clients_domain::accounting_outgoing_money_client }o--|| turnovers_invoice::id #green
+cancel_accounting_money_invoice::turnovers_client_account_id ||--|| clients_domain::turnovers_client_account #red
+core_account_domain::incoming_payment_document ||--|| accounting_incoming_money_invoice::incoming_payment_document_psbr_id #green
+core_account_domain::outgoing_payment_document ||--|| accounting_outgoing_money_invoice::outgoing_payment_document_psbr_id #green
+
+@enduml

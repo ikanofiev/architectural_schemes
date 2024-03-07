@@ -1,0 +1,212 @@
+@startuml
+namespace clients {
+
+entity wallet_incoming {
+Отнесение входящих средств на клиента
+==
+* id : uuid
+* customer_id : uuid
+* document_id : uuid
+* document_type : enum
+==
+* create_timestamp : date_time
+==
+  creator : string
+  comment : string
+}
+
+entity wallet_outgoing {
+Списание средств с клиента
+==
+* id : uuid
+* customer_id : uuid
+* invoice_id : uuid
+* status : enum
+* create_timestamp : date_time
+==
+  creator : string
+  comment : string
+}
+
+entity client_account_transactions {
+Обороты по кошельку клиента
+==
+* id : uuid
+==
+  document_id : uuid
+  document_type : enum
+==
+* customer_id : uuid
+  income_amount : number
+  expense_amount : number
+* currency :
+* value_date : date_time
+* create_timestamp : date_time
+
+}
+
+entity client_account_balance {
+Балансы кошелька клиента
+==
+* id : uuid
+==
+* customer_id : uuid
+* amount :
+* currency :
+* oper_day : dateTime
+* create_timestamp : date_time
+* update_timestamp : date_time
+
+}
+
+}
+
+namespace piggy_bank {
+
+entity piggy_bank_incoming {
+Отнесение входящих средств на клиента
+==
+* id : uuid
+* customer_id : uuid
+* document_id : uuid
+* document_type : enum
+==
+* create_timestamp : date_time
+==
+  creator : string
+  comment : string
+}
+
+entity piggy_bank_outgoing {
+Списание средств с клиента
+==
+* id : uuid
+* customer_id : uuid
+* invoice_id : uuid
+* status : enum
+* create_timestamp : date_time
+==
+  creator : string
+  comment : string
+}
+
+entity piggy_bank_transactions {
+Обороты по кошельку клиента
+==
+* id : uuid
+==
+  document_id : uuid
+  document_type : enum
+==
+* customer_id : uuid
+  income_amount : number
+  expense_amount : number
+* currency :
+* value_date : date_time
+* create_timestamp : date_time
+
+}
+
+entity piggy_bank_balance {
+Балансы кошелька клиента
+==
+* id : uuid
+==
+* customer_id : uuid
+* amount :
+* currency :
+* oper_day : dateTime
+* create_timestamp : date_time
+* update_timestamp : date_time
+
+}
+}
+
+
+
+entity core_account_domain{
+Домен корневых счетов
+==
+outgoing_payment_document : Исходящий платежный документ
+incoming_payment_document : Входящий платежный документ
+}
+
+entity registry_domain{
+Домен реестровых зачислений
+==
+registry_document_records_id : Таблица зачислений по реестру
+
+}
+
+
+namespace Invoices {
+
+entity invoice {
+Инвойс\счет на оплату
+==
+* id : uuid
+==
+* customer_id : uuid
+==
+  outgoing_document_id : uuid
+  outgoing_document_type : enum (PSBR)
+==
+  wallet_incoming_id : uuid
+==
+* expiration_date_time : date
+* amount :
+* currency :
+* status : enum
+}
+
+entity invoice_income {
+Поступления на счет на оплату
+==
+* id : uuid
+==
+* document_id : uuid
+* document_type : enum
+
+==
+* invoice_id : uuid
+* amount :
+* create_timestamp : date_time
+}
+
+}
+
+
+
+
+
+invoice::wallet_incoming_id ||--|| wallet_incoming::id #gray
+invoice::id ||--|| wallet_incoming::document_id #green
+invoice::id ||--o{ invoice_income::invoice_id #green
+
+core_account_domain::incoming_payment_document ||--|| invoice_income::document_id #green
+core_account_domain::outgoing_payment_document ||--|| invoice::outgoing_document_id #green
+
+
+
+core_account_domain::incoming_payment_document ||--|| wallet_incoming::document_id #blue
+
+wallet_outgoing::id ||--|| client_account_transactions::document_id #blue
+wallet_incoming::id ||--|| client_account_transactions::document_id #blue
+registry_domain::registry_document_records_id ||--|| client_account_transactions::document_id #blue
+wallet_outgoing::id ||--|| invoice_income::document_id #blue
+wallet_outgoing::invoice_id ||--|| invoice::id #blue
+
+
+invoice::wallet_incoming_id ||--|| piggy_bank_incoming::id #gray
+invoice::id ||--|| piggy_bank_incoming::document_id #green
+
+
+core_account_domain::incoming_payment_document ||--|| piggy_bank_incoming::document_id #blue
+
+piggy_bank_outgoing::id ||--|| piggy_bank_transactions::document_id #blue
+piggy_bank_incoming::id ||--|| piggy_bank_transactions::document_id #blue
+
+piggy_bank_outgoing::id ||--|| invoice_income::document_id #blue
+piggy_bank_outgoing::invoice_id ||--|| invoice::id #blue
+
+@enduml

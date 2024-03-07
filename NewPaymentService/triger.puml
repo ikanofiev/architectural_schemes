@@ -1,0 +1,79 @@
+@startuml
+
+
+actor "Пользователь" as user
+
+participant "НРД" as nsd
+
+participant "pl-int-emergency-tap" as crane
+participant "PROMETHEUS" as pm
+
+
+== Открытие операционного дня ==
+
+nsd -> crane++ : operationDayStart
+crane -> crane : DayIsOpen = true
+return
+
+crane--
+nsd -> crane++ : tapIsClosed без correlationId
+
+alt DayIsOpen = true
+    crane-> pm++ : GET ключевые метрики на текущий момент.
+    return
+    alt Значение не выходят за пределы
+       crane -> nsd : openTap
+       crane -> crane : DayIsOpen = false
+    else
+       crane -> pm++ : Alert
+       pm--
+    end
+else DayIsOpen = false
+
+== Проблемы на стороне НРД ==
+
+     crane -> pm++ : Alert
+     pm--
+     crane--
+end
+
+
+== Массовые проблемы в бирже ==
+pm -> crane++ : Alert api\v1\paymentTap\close
+
+    crane -> nsd : closeTap
+crane -> crane : Start timer
+alt Получено подтверждение and Таймер не завершился
+    nsd -> crane : tapIsClosed + correlationId
+    crane -> pm : Успешно остовлен обмен
+    crane -> crane : Stop timer
+else Таймер завершился
+    crane -> pm : Alert не получено подтверждение о остановке обмена
+
+end
+
+ nsd -> crane : tapIsClosed + correlationId
+    crane -> pm : Успешно остовлен обмен
+
+
+== Ручники ==
+
+user -> crane : api\v1\paymentTap\open
+crane -> nsd : openTap
+crane -> crane : Start timer
+alt Получено подтверждение and Таймер не завершился
+    nsd -> crane : tapIsOpen + correlationId
+    crane -> pm : Успешно запущен обмен
+    crane -> crane : Stop timer
+else Таймер завершился
+    crane -> pm : Alert не получено подтверждение о запуске обмена
+
+end
+ nsd -> crane : tapIsOpen + correlationId
+    crane -> pm : Успешно запущен обмен
+
+@enduml
+
+participant "MOEX-kafka" as mk
+
+

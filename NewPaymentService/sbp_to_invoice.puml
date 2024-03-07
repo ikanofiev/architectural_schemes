@@ -1,0 +1,30 @@
+@startuml
+
+participant "payment-hub" as hub
+participant nsd
+
+note over hub
+    Уже есть QR-код для пополнения кошелька
+endnote
+
+nsd -> hub++: camt.054 (kafka topic nsd-money-transfer-receiving-events)
+note over hub
+    Определить, что это СБП и найти QRC-document
+    Создать запись incoming_payment_document_sbp  (данными из camt.054)
+    - Если в QRC-document заполнено поле invoice_id, найти Счет на оплату (invoice),
+            если счет на оплату в статусе WAIT_FOR_MONEY,
+            зачислить средства на инвойс,
+            иначе зачислить средства на кошелек (wallet_incoming через сервис)
+    Сделать транзакцию по core_account* (через сервис)
+    Сделать транзакцию по "реестру бенефициаров"
+endnote
+
+nsd -> hub++: callback (/api/v1/qrc/notification-base-url)
+note over hub
+    Найти QRC-document
+    Обновляем запись incoming_payment_document_sbp (маппинг из callback, где возможно)
+endnote
+hub--
+hub--
+
+@enduml

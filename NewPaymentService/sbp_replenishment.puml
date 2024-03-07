@@ -1,0 +1,12 @@
+@startuml
+(*) --> [Подтверждение СБП о отправке средств] MoneyInSBP
+MoneyInSBP --> [От СБП получен\nотказв\nпродолжении операции] CancelSBP
+MoneyInSBP --> [Получен Camt.054] SBPConfirmation
+SBPConfirmation --> [Средства резервированны\nпод вклад] NSD_COMPLETION
+SBPConfirmation --> [Средства резервированы\nпод кошелек] WALLET_REPLENISHMENT
+CancelSBP --> (*)
+WALLET_REPLENISHMENT --> (*)
+NSD_COMPLETION --> (*)
+
+
+@enduml

@@ -1,0 +1,53 @@
+@startuml
+namespace Warnings {
+entity warning_contracts {
+Договора помеченные как подозрительные. Закрыты досрочно ранее 14 дней.
+==
+* id : uuid
+==
+* payment_document_id : uuid
+==
+* create_timestamp : date_time
+* update_timestamp : date_time
+* status : enum
+}
+entity marker_warning_operations {
+Операции, помеченные подозрительностью.
+==
+* id : uuid
+==
+* payment_document_id : uuid
+* warning_contract_id : uuid
+* registry_document_id : uuid
+* registry_document_records_id : uuid
+* registry_document_status : enum
+* registry_document_records_status : enum
+* create_timestamp : date_time
+}
+
+
+
+}
+
+entity money_transfer {
+связи
+==
+* id : uuid
+==
+}
+
+entity payment_document {
+связи
+==
+* id : uuid
+==
+* money_transfer_id : string
+}
+
+money_transfer::id ||--|| payment_document::money_transfer_id #blue
+warning_contracts::payment_document_id ||--|| payment_document::id #blue
+marker_warning_operations::payment_document_id }o--|| payment_document::id #blue
+marker_warning_operations::warning_contract_id ||--|| warning_contracts::id #blue
+
+@enduml
+warning_contract_id

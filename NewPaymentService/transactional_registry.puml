@@ -1,0 +1,63 @@
+@startuml
+
+actor source as "Система источник реестров"
+participant hub as "pl-payment-hub"
+participant bpm as "mp-sys-bpm"
+participant craml as "CRAML"
+== Блок загрузки реестра ==
+alt Если реестр передается по старой схеме
+    source++
+    source --> hub++ : (incoming-payment-registry)\nРеестр текущем формате
+    hub -> hub : Сохранение реестра без\nпроцедур мачинга реестра с платежкой\n(status = NEW,\nфлаг страничного реестра = false)
+    return : (incoming-payment-registry-status-changed)\nРезультат записи реестра.
+else Если реестр передается по новой, постраничной, схеме
+    loop количество страниц
+        source --> hub++ : (incoming-payment-registry-pages)\nОчередная страница реестра
+        hub -> hub : Сохранение страницы реестра\n(registry_status = RECEIVING,\nrecord_status = NEW,\nфлаг страничного реестра = true)
+        alt Получены все страницы
+            hub -> hub : Установка статуса реестра NEW
+        end alt
+        return (incoming-payment-registry-status-changed)\nИзменение реестра.\nЕсли реестр многостраничный\nпо каждой странице отчитаться отдельно.
+    end loop
+end alt
+== Блок обработки реестра ==
+loop Шедулер поиска\nнеобработанных реестров
+
+    hub -> hub++ : Выполнить поиск\nне обработанных реестров.\n(registry_document.status = NEW)
+    loop Для каждого найденного\nнеобработанного реестра
+        hub -> hub++ : Выполнить поиск платежного\nдокумента соответствующего реестра\n(существующий функционал)
+        alt Если платежный\nдокумент найден
+            hub -> hub : Открыть транзакцию к реестру\nи соответствующей ПД\n(блокировка указанных записей.)
+            hub -> hub : Установить статус реестра PROCESSING.\nУстановить статус записей реестра PROCESSING.\nУстановить статус ПД MATCH_WITH_REGISRY
+            hub --> source : (incoming-payment-registry-status-changed)\nИзменение реестра.\nЕсли реестр многостраничный\nпо каждой странице отчитаться отдельно.
+            hub -> hub : Выполнить commit транзакции.
+            loop Для каждой записи в реестре
+                hub -> hub : Открыть транзакцию к записи реестра.
+                hub -> craml++ : REST запрос данных клиента
+                return : Данные клиента.
+                alt Клиент найден.\nСтатус и уровень идентификации\nподходит для выплаты бонуса
+                    hub -> hub :  Создать транзакцию зачисления на кошелек.\n(сущестующий функционал.\nСоздает запись в client_account_transactions\nсвязанную с записью реестра и обновляет\nбаланс клиента в client_account_balance)
+                    hub -> hub : Установить статус записи реестра PROCESSED
+                else Клиент не найден. либо статус клиента не позволяет выплатить бонус.
+                    hub -> hub : Установить статус записи реестра REJECTED
+                end alt
+                alt Это последняя не обработанная запись реестра
+                    hub -> hub: Установить статус\nregistry_document в PROCESSED\nили\nWAIT_FOR_REFUND\nв зависимости от обработанных записей\n(существующий функционал)
+                end alt
+                 hub -> hub : Выполнить commit транзакции.
+            end
+            alt Реестр обработан полностью?
+                alt Признак постраничного реестра = false
+                   hub --> source : (incoming-payment-registry-status-changed)\nИзменение реестра.
+                   hub --> bpm : (registry-to-wallet-payment-processed)\nСписок разнесений для mp-sys-bpm\nполностью по всему реестру.\n(существующий функционал)
+                else Признак постраничного реестра = true
+                    loop количество страниц в рестре
+                        hub --> source : (incoming-payment-registry-status-changed)\nИзменение реестра.
+                        hub --> bpm : (registry-to-wallet-payment-processed)\nСписок разнесений для mp-sys-bpm\nв разбивке на страницы.
+                    end
+                end
+        end alt
+    end loop
+end loop
+
+@enduml

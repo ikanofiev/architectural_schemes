@@ -1,0 +1,45 @@
+@startuml
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+skinparam wrapWidth 300
+ LAYOUT_WITH_LEGEND()
+ LAYOUT_LANDSCAPE()
+
+ title
+  <i>«СУБД Биллинг»</i>
+  <i>«концепт»</i>
+ end title
+
+ System_Boundary(db, "СУБД сервиса") {
+
+
+  ContainerDb(tarif,"Справочник тарифов")
+  ContainerDb(report,"Реестры на выгрузку")
+  ContainerDb(sourceDate, "Исходные данные для расчетов")
+  ContainerDb(dictionary,"Служебные справочники")
+
+
+ }
+
+ @enduml
+System(1c,"1C Биллинг"){
+}
+System(ui,"ЦУФ"){
+}
+System_Ext(mail,"Почтовый сервер"){
+}
+
+ContainerDb(DWH, "DWH"){
+
+}
+
+BiRel(DWH, db, "Исходные данные для расчета","REST")
+Rel(report, db, "Выгрузка реестров для партнеров")
+Rel(report, 1c,"Выгрузка реестра", REST)
+BiRel(ui,db,"Управление настройками тарифов. Добавление партнеров.")
+BiRel(ui,report,"Запрос\nвыгрузки\nотчетности")
+BiRel(bill,db,"Инициация загрузки в БД исходных данных.")
+BiRel(bill,bill,"Расчет начислений.")
+Rel(bill, db, "Сохранение в БД результатов расчета")
+Rel(report, mail, "Выгрузка реестра в PDF", email)

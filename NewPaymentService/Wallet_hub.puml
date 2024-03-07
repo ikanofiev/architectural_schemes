@@ -1,0 +1,35 @@
+@startuml
+
+
+skinparam handwritten true
+actor user
+participant client_app
+participant "Secure confirm" as sec
+participant "pl-payment-hub" as hub
+participant "Notifier" as note
+
+user -> client_app++ : Вывести средства.
+client_app -> hub++ : Запрос актуального баланса
+return
+client_app -> client_app : сумма достаточна
+alt Достаточно средств
+    client_app -> hub++ : create_invoice_sec_confirm_required
+    hub -> sec++ : Запрос безопасного подтверждения
+    sec -> user++ : code
+    sec--
+    user -> client_app : code
+    user--
+    client_app -> hub : secure_confirm - code
+    hub -> sec++ : code walidation
+    return
+    alt WALID
+        hub -> hub : Wallet_to_invoice
+        hub -> hub : complite_invoice
+    else
+    end alt
+    hub --> client_app : 200
+else
+    client_app --> user : недостаточно средств.
+end alt
+
+@enduml

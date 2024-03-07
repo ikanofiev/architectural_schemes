@@ -1,0 +1,17 @@
+@startuml
+(*) --> [camt.054] received
+received --> [Платеж соответствует\nреестровому платежу\nисточник АСВ\nв назначении\nпараметры реестра] "defined register"
+"defined register" --> [Платеж отнесен\nк реестру] "registered register"
+"defined register" --> [Реестр по платежу\nне поступил вовремя\nнеобходим возврат] undefined
+received --> [Невозможно определить\nполучателя платежа] undefined
+received --> [m2m проверки\nопределен клиент\nсредства учтены\nна кошельке] "customer defined"
+received --> [Определен счет\инвойс\nожидающий данный платеж] "order defined"
+"order defined" --> [Средства учтены\nпод оплату\nпродукта\услуги] processed
+"customer defined" --> [Средства учтены\nна кошельке клиента] processed
+"registered register" --> [Реестр полностью\nобработан в т.ч.\nвозврат излишков\nпо реестру] processed
+undefined -->  [Платеж возвращен\nотправителю]processed
+undefined --> [m2m проверки\nопределен клиент\nсредства учтены\nна кошельке] "customer defined"
+undefined --> [Определен счет\инвойс\nожидающий данный платеж] "order defined"
+undefined --> [Платеж соответствует\nреестровому платежу\nисточник АСВ\nв назначении\nпараметры реестра] "defined register"
+processed --> [Платежный документ\nобработан полностью] (*)
+@enduml

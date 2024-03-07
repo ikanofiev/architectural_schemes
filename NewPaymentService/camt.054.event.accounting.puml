@@ -1,0 +1,48 @@
+@startuml
+'https://plantuml.com/activity-diagram-beta
+
+start
+:camt.054();
+partition FindCoreAccount {
+:call.service(mp-sys-dictionary(camt.054.receiver.account()))
+:find.record(core_accounts(id));
+if (core_accounts(dictionary_id).id is not_exist) then
+    :loging.error;
+    :stop;
+endif
+}
+if () then (camt.054(PS_MONEY_TRANSFER_NSD_ENROLLMENT))
+  partition AccountingInboundCoreTurnovers {
+  :create.record(inсoming_payment_document_psbr);
+  :create.record(turnovers_core_accounts.in);
+  if () then (balance_core_accounts.operDay(NOW) is exist)
+    :edit.record( balance_core_accounts.operDay(NOW).balance\n = inc(inbound_payment_document_psbr(amount));
+  else (balance_core_accounts.operDay(NOW) is not_exist)
+    :create.record(balance_core_accounts.operDay(NOW));
+    :edit.record(\nbalance_core_accounts.operDay(NOW).balance\n = balance_core_accounts.operDay(NOW-1).balance \n + (inbound_payment_document_psbr(amount));
+  endif
+}
+ partition "Определение принадлежности платежного документа" {
+:"Определение данных отправителя";
+if (Отправитель АСВ) then (Yes)
+    :inсoming_payment_document_psbr.status="Реестровый платеж";
+else (Yes)
+    :inсoming_payment_document_psbr.status="Получатель не определен";
+endif
+ }
+else (camt.054(PS_MONEY_TRANSFER_WITHDRAWAL_REQUEST_RESULT_SUCCESS))
+  partition AccountingOutgoingCoreTurnovers {
+  :create.record(outgoing_payment_document_psbr);
+  :create.record(turnovers_core_accounts.out);
+    if () then (balance_core_accounts.operDay(NOW) is exist)
+      :edit.record( balance_core_accounts.operDay(NOW).balance\n = -inc(inbound_payment_document_psbr(amount));
+    else (balance_core_accounts.operDay(NOW) is not_exist)
+      :create.record(balance_core_accounts.operDay(NOW));
+      :edit.record(\nbalance_core_accounts.operDay(NOW).balance\n = balance_core_accounts.operDay(NOW-1).balance \n - (inbound_payment_document_psbr(amount));
+    endif
+  }
+endif
+
+stop
+
+@enduml

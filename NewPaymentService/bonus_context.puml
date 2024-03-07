@@ -1,0 +1,65 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+
+
+skinparam wrapWidth 300
+skinparam linetype ortho
+
+title
+    <b>pl-bonuses</b>
+    <i>«Сопровождение маркетинговых акций Маркетплейса и Биллинг с Партнерами»</i>
+end title
+System_Boundary(fin,"Платформа финуслуги\n(80% функционала\nаналитики\начисления\nи выплаты бонусов)"){
+
+    System(lk, "LK or Mobile")
+
+    System_Boundary(platform,"Платформенные сервисы"){
+        System(pay,"Платежные сервисы","pl-payment-hub\nmp-sys-nsd\npl-int-onyx") #green
+        System(cuf, "ЦУФП","Средства администрирования\nОтчетность") #blue/green
+        System(bonus,"Сервис акций", "pl-bonuses") #green
+        System(intdwh, "Интеграционный\nсервис\nDWH", "mp-int-dwh") #blue/green
+    }
+
+    System_Boundary(products,"Продуктовые сервисы"){
+        System(dep, "Депозиты","mp-sys-customer-contract") #blue/green
+        System(cred, "Кредиты","") #blue/green
+        System(invest, "Инвестиции","") #blue/green
+        System(inguru,"Ингуру","mp-sys-insurance") #blue/green
+    }
+
+    System(CRM,"CRM") #blue/green
+    System(CMO,"Compaign Management") #blue/green
+}
+
+System_Ext(nsd,"НРД")
+
+
+System_Boundary(moex,"Общебиржевые сервисы\n(20% не изменяемого функционала\nпо согласованию\бюджетированию\nи налоговому и бух.учету"){
+
+    System(1c, "1C","Бухгалтерская отчетность\nВалидация реестра\nУчет налогов") #blue/green
+    System(OEBS, "OEBS","Финансовое планирование")
+    System(DWH, "DWH","Отчетность")
+    System(MDM, "MDM","Справочник партнеров")
+}
+
+Person_Ext(client, "Client")
+
+client-[#blue,bold]->lk:""
+lk-[#blue,bold]->products:"Заявка на продукт"
+products-[#red,dotted,thickness=4]R->bonus:"Продуктовые метрики\nkafka"
+cuf -[#red,dotted,thickness=4]-> bonus : "Средства\nадминистрирования\nREST"
+
+DWH-[#blue,bold]->intdwh:"Отчеты\nREST\nПрямое подключение к БД"
+bonus-[#red,dotted,thickness=4]->OEBS:"Отчеты\nREST\file"
+1c<-[#red,dotted,thickness=4]->bonus:"Реестр на расчет выплаты\nГотовый реестр для выплаты\nREST"
+MDM<-[#red,dotted,thickness=4]->bonus:"Получение данных\nо партнерах ЮЛ\nREST"
+bonus<-[#green,dotted,thickness=4]->pay: "Запрос на перевод по реестру(отдельный счет)\nРеестр на начисление клиентам\nkafka"
+pay<-[#blue,bold]->nsd: "Обмен платежными сообщениями"
+
+intdwh-[#red,dotted,thickness=4]->bonus:"Отчеты\nREST"
+CRM-[#red,dotted,thickness=4]->bonus:"Отчеты\nREST"
+CMO<-[#red,dotted,thickness=4]->bonus:"Генерация промокодов\nREST"
+
+
+@enduml

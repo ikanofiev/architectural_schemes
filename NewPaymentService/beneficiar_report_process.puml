@@ -1,0 +1,17 @@
+@startuml
+participant "PL-PAYMENT-HUB" as hub
+participant "pl-backoffice-core" as backoffice
+participant
+participant "mp-sys-doc-signer" as sig
+participant "pl-int-onyx" as onyx
+participant "НРД" as nsd
+autonumber
+
+loop every day at HH-MM for date = now()-1
+    hub -> hub : Запуск процесса формирования реестра бенефициаров.
+    hub -> hub : Получить все актуальные балансы кошельков клиентов за предыдущий рабочий день (таблица client_account_balance, где oper_day <= now()-1. Берется БЛИЖАЙШАЯ к oper_day= now()-1 запись о балансе клиента.)
+    hub -> hub : Найти все "открытые", пересчитать их актуальный баланс.
+    hub -> hub : В разрезе клиента пересчитать баланс каждого клиента исходя из шагов 2 и 3.
+    loop for each customers
+        hub ->
+@enduml

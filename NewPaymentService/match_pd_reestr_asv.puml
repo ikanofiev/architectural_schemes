@@ -1,0 +1,37 @@
+@startuml
+
+actor "The function of accounting\nfor the received payment" as camt
+actor "Service for parsing\nthe register of DIA " as dia
+participant "Function for compliance of the registry" as fcr
+participant "The function of crediting funds to the client through the register." as pay
+
+camt -> fcr : Платежный документ с статусом "Реестровый платеж"
+fcr -> fcr : Определние отправителя платежа
+alt Отправитель = АСВ
+    fcr -> fcr : Поиск в назначении платежа\nданных реестра.
+    alt Данные реестра найдены
+        fcr -> fcr : Поиск в таблице Registry соответствующего реестра.
+        alt Реестр найден
+            fcr -> fcr : Установить связь ПД и реестра.
+            fcr -> pay : Передать реестр в дальнейшую обработку
+        end
+    end
+end
+
+dia -> fcr : Получен реестр выплат.
+fcr -> fcr : Записать реестр в БД
+fcr -> fcr : Поиск ПД в статусе = "Реестровый платеж"
+alt ПД в статусе = "Реестровый платеж" найдены
+    alt Отправитель = АСВ
+        fcr -> fcr : Поиск в назначении платежа\nданных реестра.
+        alt Данные реестра найдены
+            fcr -> fcr : Поиск в таблице Registry соответствующего реестра.
+            alt Реестр найден
+                fcr -> fcr : Установить связь ПД и реестра.
+                fcr -> pay : Передать реестр в дальнейшую обработку
+            end
+        end
+    end
+end
+
+@enduml

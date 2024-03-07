@@ -1,0 +1,175 @@
+@startuml
+skinparam linetype ortho
+
+
+
+entity registry_document{
+== Реестр на выплату бонусов ==
+* id : uuid	ИД
+* version : integer Версия
+
+* create_timestamp : date_time
+* update_timestamp : date_time
+* registry_number : string Номер реестра
+* registry_date : date Дата реестра
+* registry_amount : number Сумма реестра без налога
+* registry_total_amount : number Сумма реестра с учетом налога
+* registry_tax : number Сумма налога
+* currency : enum(string) Валюта реестра
+* registry_file_name : string Наименование файла реестра
+* registry_type : string Тип реестра.
+* status : enum Статус обработки реестра
+== PaymentDocument ==
+payment_order_id: uuid Ссылка на заявку в pl-payment-hub
+payment_doc_number : string(6) Номер платежного документа по нумерации отправителя
+payment_doc_date : date	Дата платежного документа
+payment_sender_inn : string(12)	ИНН плательщика
+payment_sender_account : string(25)	Счет плательщика
+payment_sender_bic : string(9) БИК банка отправителя
+payment_sender_info	: string Наименование отправителя
+purpose : string Назначение платежа.
+== Внешние Реестры ==
+external_promotions_card_id : uuid ЛИбо связь с карточкой акции тут
+}
+
+entity registry_document_history{
+* id : uuid
+* registry_document_id : uuid
+* registry_document_status : enum
+* create_timestamp : date_time
+
+== Данные оператора ==
+* system_code : string
+* login :
+* role :
+* action : (enum)
+
+}
+
+
+entity registry_document_record{
+Записи реестра
+* id :	 uuid ИД
+* version : integer Версия
+* create_timestamp : date_time Дата-время создания записи
+* update_timestamp : date_time Дата-время обновления записи
+* registry_document_id : uuid ИД документа реестра по нумерации Хаба
+* customer_id : uuid ИД клиента
+  record_key : string ИД записи реестра по нумерации источника
+* amount : number Сумма выплаты
+* total_amount : number Сумма с учетом налога
+* tax : number Сумма налога
+  purpose : string Назначение платежа
+* status : enum Статус обработки записи
+== Целевые поля связи с акциями ==
+ -- **bonus_id**-- : **(!)** Связь развернули в один-к-многим
+
+== Потенциально отключаемые поля ==
+  promotion_id : ссылка на Акцию\nв приоритете должна вернуть\nпри выгрузке два параметра:\nНазвание акции и вид-выплаты(enum).
+  code_id :
+  contract_id
+
+== Поля ориентированные на работу с внешними реестрами ==
+  external_promotion_accrual_date : Дата применения бонуса на клиента. (date_promocode)
+
+== Страничный режим ==
+registry_page_id : uuid
+}
+note right
+Первая секция:
+        поля постоянные и не изменяемые.
+        Во всяком случае пока видится так.
+Вторая секция:
+        целевые поля для автоматизации начислений.
+Третья секция:
+        ныне существующие поля,
+        но потенциально исключаемые
+        из использования.
+Четвертая секция:
+        "временные" поля, либо сохранятся
+        для работы с внешними реестрами.
+
+end note
+
+
+
+entity registry_document_record_history{
+* id : uuid
+* registry_document_record_id : uuid
+* registry_document_record_status : enum
+* create_timestamp : date_time
+== Данные оператора ==
+* system_code : string
+* login :
+* role :
+
+}
+
+entity registry_page {
+id : uuid ИД страницы
+registry_document_id : ИД документа реестра
+number : int
+last_page : boolean
+
+}
+
+registry_document_record }o--|| registry_document
+registry_page  }o--|| registry_document
+registry_document_record  }o--|| registry_page
+registry_document_history  }o--|| registry_document
+registry_document_record_history  }o--|| registry_document_record
+
+@enduml
+
+
+id
+version
+create_timestamp
+update_timestamp
+registry_number
+registry_date
+registry_amount
+registry_file_name
+payment_doc_number
+payment_doc_date
+payment_sender_inn
+payment_sender_account
+payment_sender_bic
+payment_sender_info
+status
+currency
+registry_type
+purpose
+payment_order_id
+external_promotions_card_id
+payment_order_create_timestamp
+payment_order_create_attempt
+registry_total_amount
+registry_tax
+is_external_registry
+verify_clients
+report_data_id
+
+
+
+
+id
+version
+create_timestamp
+update_timestamp
+registry_document_id
+customer_id
+record_key
+amount
+purpose
+status
+code_id
+promotion_id
+contract_id
+external_promotion_accrual_date
+bonus_id
+total_amount
+tax
+deposit_expiration_date
+optional_keys
+row_number

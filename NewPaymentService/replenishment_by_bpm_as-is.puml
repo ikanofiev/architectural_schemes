@@ -1,0 +1,315 @@
+@startuml
+
+
+skinparam handwritten true
+
+
+
+actor "Сотрудник операционного департамента\nDevOps" as oper
+participant "НРД" as nrd
+participant error.topic
+participant skip
+participant "mp-sys-nsd" as nsd
+participant "mp-sys-dictionary-bank\nmp-sys-dictionary" as dict
+participant "pl-payment-hub" as hub
+participant "mp-sys-bpm" as bpm
+participant "mp-sys-payment" as payment
+participant "mp-sys-customer-contract" as mcc
+participant "CRAML" as craml
+
+== Процесс As-Is ==
+
+== В данной схеме будет описан процесс обработки входящих ПД из ПСБ\nТекущая обработка поступающих ПД начинается в mp-sys-nsd в качестве адаптера с системам НРД\nДалее платежный документ поступает в pl-payment-hub()далее ХАБ где происходит обязательный учет по Н\С(номинальный счет, корневой счет по нотации pl-payment-hub)\nДалее в ХАБе производится анализ ПД на предмет наличия бизнес-логики его обработки\nна текущий момент ХАБ из ПСБР обрабатывает только платежи связанные с реестровыми выплатами(АСВ, бонусы, выплаты по инвест.программам), а так же платежи, по которым\nвыставлены заявки на ожидание(expected-incoming) используется на момент описания только инвестициями, но есть описание реализации для депозитов(выплата процентов, закрытие вклада, частичное снятие).\nВ случае если платеж не подпадает под указанную выше логику, то учет по бизнес-процессу передается в стандартный канал mp-sys-bpm где\nдокумент коррелируется либо в ожидающий ПД процесс(выплата процентов, закрытие, досрочное закрытие, частичное снятие), либо, если нет ожидающего процесса в\nпроцесс replenishment где происходит распознование получателя платежа, проверки m2m и зачисление платежа на финап клиента(резерв или кошелек) или учет как невыясненного.\nТак же происходит обратное зеркалирование в pl-payment-hub, т.к. в ХАБе платеж стоит с статусе невыясненного.\n\nВторая часть "марлезонского балета" будет заключаться в первичном пополнении вклада, сейчас это реализовано в main-process в bpm, с зеркалированием операций в ХАБ.==
+
+nrd -> nsd++ : camt.054.inbound
+nsd -> dict++ : Получение\nреквизитов Н\С
+return
+alt Платеж на номинальный счет?
+    nsd -> dict++ : Преобразование SWIFT\nбанка отправителя
+    return
+    alt БИК получен?
+        nsd -> hub++ : отправка преобразованного\ncamt.054.inbound
+    else
+        nsd --> error.topic++
+        error.topic--
+    end
+else Платеж не на номинальный счет.
+    nsd --> skip++
+    nsd--
+    skip--
+end
+
+hub -> hub++ : Учет в хабе
+hub -> hub++ : Создание записи в\nincoming-payment-document-psbr
+hub -> hub : Создание транзакции в\ncore-account-transactions
+hub -> hub : Изменение баланса в\ncore-acount-balance\nза соответствующий\nоперационный день.
+hub -> hub++ : Учет по бизнес-логике
+alt реквизиты и маска ПД соответствует\nРеестровому платежу(registry_counterparty)?
+    hub -> hub : Платежу устанавливается\nстатус Waiting-for-registry,\nдалее обработка по реестровому домену.
+    hub -> bpm++: Отправить событие зеркалирования.
+        bpm -> bpm : инициируется процесс\nregistry-payment.bpmn
+        bpm -> payment++: Создание MoneyTransfer
+        payment--
+        bpm -> payment++: Создание\nMoneyTransferOperation=registry_income
+        payment--
+        bpm--
+else реквизиты соответствуют\nожиданию поступающего ПД\n(expected_wallet_incoming,\nсравнение по реквизитам\nили ключу в назначение ПД)?
+    hub -> hub : В соответствующей записи\nexpected_wallet_incoming\nдобавить ИД ПД\nиз incoming-payment-document-psbr
+    hub -> hub : Создать запись в таблице\nwallet_incoming,\nИД созданной записи добавить\nв expected_wallet_incoming\nв поле wallet_incoming_id
+    hub -> hub : Создать запись\nв client_account_transaction\nи соответствующие связи
+    hub -> hub : Создать\обновить запись\nв client_account_balance\nв соответствующем операционном дне.
+    hub -> hub : Установить ПД статус PROCESSED
+    hub -> bpm++: Отправить событие зеркалирования.
+    bpm -> bpm : инициируется процесс\nwallet-payment-document-mirroring.bpmn
+    bpm -> payment++: Создание MoneyTransfer
+    payment--
+    bpm -> payment++: Создание\nMoneyTransferOperation=WALLET_REPLENISHMENT
+    payment--
+    bpm--
+else Бизнес-логики для обработки ПД нет.
+    hub -> hub : Установить статус ПД UNDECINDED
+    hub -> bpm++ : camt.054.inbound\nв стандартный вход обработки...
+    hub--
+    hub--
+    hub--
+end
+alt Есть запущеный ожидающий процесс?
+    bpm -> bpm++ : Корреляция события\nв ожидающий процесс\n(Выплата процентов,\nдосрочка, плановое закрытие,\nчастичное снятие.)
+    bpm -> mcc++ : Отправка событий по договору.
+    mcc--
+    bpm -> payment++: Создание MoneyTransfer
+    payment--
+    bpm -> payment++: Создание соответствующей\nMoneyTransferOperation\n(WALLET_REPLENISHMENT как правило)
+    payment--
+    bpm --> hub++ : Вызов соответствующего\nREST для зеркалирования учета.
+    bpm--
+       hub -> hub : Создать запись в таблице\nwallet_incoming, ИД созданной\nзаписи добавить\nв expected_wallet_incoming\nв поле wallet_incoming_id
+       hub -> hub : Создать запись\nв client_account_transaction\nи соответствующие связи
+       hub -> hub : Создать\обновить запись\nв client_account_balance\nв соответствующем операционном дне.
+       hub -> hub : Установить ПД статус PROCESSED
+hub--
+else
+    bpm -> bpm++ : Корреляция события\nв процесс REPLENISHMENT
+    bpm -> bpm++ : Разбор ПД, парсинг\nназначение платежа\nи других реквизитов отправителя
+    alt Реквизиты счета отправителя\nне соответствуют маске допустимых\nсчетов источников\n(лицевые счета, счета вкладов,\nсчета ИП, некоторые маски кор. и тех. счетов).
+        note right
+            Зачисление на финап невыясненных.
+            Автовозврат на текущий момент отключен.
+        end note
+        bpm -> payment++: Создание MoneyTransfer
+        payment--
+        bpm -> payment++: Создание соответствующей\nMoneyTransferOperation\n(UNIDENTIFIED_INCOMING_TRANSFER)
+        payment--
+        note right
+            На данном этапе деньги зависают на
+            невыясненных расчетах. Дополнительного
+            зеркалирования в ХАБ не происходит,
+            т.к. платеж там и так висит в нераспределенных.
+            Так же процесс REPLENISHMENT "подвисает" в ожидании
+            решения по платежу
+        end note
+    else В назначении платежа\nприсутствует ИД договора?\n(Определяется последовательность\nцифр от 5 знаков,\nс предшествующей W или D,\nпробел между буквой и\nцифрами игнорируется)
+        bpm -> mcc++ : Поиск договора по короткому ИД
+        return
+        alt Договор найден?
+            bpm -> bpm++: Определение клиента\nв поле Отправитель\ИНН
+            note right
+                В указанных полях определяются данные клиента:
+                ФИО - парсится последовательность слов разделенных пробелами, ограниченных ...
+                ИНН в поле Отправитель и в поле ИНН, последовательность 12 цифр с проверкой на ключевание.
+            end note
+            bpm -> craml++ : запрос данных клиента по ИД клиента по договору.
+            return
+            bpm -> bpm : сравнение данных "CRAML" с данными из ПД
+               note right
+                    Застрелите, не помню - возможно есть проверка статуса клиента.
+                    Хотя если договор найден, то под зачисление клиент подпадает
+                    в любом случае.
+               end note
+            alt Отправитель и клиент по договору совпал?
+                alt Договор зачисления из ПД - вклад?
+                    alt статус договора = Ожидает поступления средств?
+                            bpm -> payment++: Создание MoneyTransfer
+                            payment--
+                            bpm -> payment++: Создание соответствующей\nMoneyTransferOperation\n(NSD_COMPLETION)
+                            payment--
+                            bpm --> hub++ : Вызов соответствующего\nREST для зеркалирования учета.
+                            bpm--
+                               hub -> hub : Создать запись в таблице\invoice_income,\nгде ИД инвойса = ИД договора вклада.
+                               hub -> hub : Установить ПД статус PROCESSED
+                        hub--
+                    else Договор в ином статусе.
+                       bpm -> payment++: Создание MoneyTransfer
+                           payment--
+                           bpm -> payment++: Создание соответствующей\nMoneyTransferOperation\n(WALLET_REPLENISHMENT)
+                           payment--
+                           bpm --> hub++ : Вызов соответствующего\nREST для зеркалирования учета.
+                           bpm--
+                              hub -> hub : Создать запись в таблице\nwallet_incoming, ИД созданной\nзаписи добавить\nв expected_wallet_incoming\nв поле wallet_incoming_id
+                              hub -> hub : Создать запись\nв client_account_transaction\nи соответствующие связи
+                              hub -> hub : Создать\обновить запись\nв client_account_balance\nв соответствующем операционном дне.
+                              hub -> hub : Установить ПД статус PROCESSED
+                       hub--
+                    end
+                else Договор кошелька.
+                  bpm -> payment++: Создание MoneyTransfer
+                  payment--
+                  bpm -> payment++: Создание соответствующей\nMoneyTransferOperation\n(WALLET_REPLENISHMENT)
+                  payment--
+                  bpm --> hub++ : Вызов соответствующего\nREST для зеркалирования учета.
+                  bpm--
+                  hub -> hub : Создать запись в таблице\nwallet_incoming, ИД созданной\nзаписи добавить\nв expected_wallet_incoming\nв поле wallet_incoming_id
+                  hub -> hub : Создать запись\nв client_account_transaction\nи соответствующие связи
+                  hub -> hub : Создать\обновить запись\nв client_account_balance\nв соответствующем операционном дне.
+                  hub -> hub : Установить ПД статус PROCESSED
+                  hub--
+                end
+            else Не совпали(m2m не пройдены)
+              note right
+                 Зачисление на финап невыясненных.
+                 Автовозврат на текущий момент отключен.
+              end note
+              bpm -> payment++: Создание MoneyTransfer
+              payment--
+              bpm -> payment++: Создание соответствующей\nMoneyTransferOperation\n(UNIDENTIFIED_INCOMING_TRANSFER)
+              payment--
+              note right
+                  На данном этапе деньги зависают на
+                  невыясненных расчетах. Дополнительного
+                  зеркалирования в ХАБ не происходит,
+                  т.к. платеж там и так висит в нераспределенных.
+                  Так же процесс REPLENISHMENT "подвисает" в ожидании
+                  решения по платежу
+              end note
+            end
+        end
+    else Договор не найден в mp-sys-customer-contract\nлибо отсутствует в назначении платежа.
+        alt В поле ИНН или отправитель найдено ИНН?
+            bpm -> craml++ : Поиск клиента по ИНН
+            return
+            alt ФИО в отправителе и ФИО из "CRAML" совпадают? (с учетом опечаток)
+                bpm -> mcc++: По ИД клиента получить ИД договора кошелька.
+                return
+                alt Договор кошелька есть
+                    bpm -> payment++: Создание MoneyTransfer
+                    payment--
+                    bpm -> payment++: Создание соответствующей\nMoneyTransferOperation\n(WALLET_REPLENISHMENT)
+                    payment--
+                    bpm --> hub++ : Вызов соответствующего\nREST для зеркалирования учета.
+                    bpm--
+                    hub -> hub : Создать запись в таблице\nwallet_incoming, ИД созданной\nзаписи добавить\nв expected_wallet_incoming\nв поле wallet_incoming_id
+                    hub -> hub : Создать запись\nв client_account_transaction\nи соответствующие связи
+                    hub -> hub : Создать\обновить запись\nв client_account_balance\nв соответствующем операционном дне.
+                    hub -> hub : Установить ПД статус PROCESSED
+                    hub--
+                end
+
+            end
+        else Не совпадает, либо клиент не найден в "CRAML"
+                 note right
+                    Зачисление на финап невыясненных.
+                    Автовозврат на текущий момент отключен.
+                 end note
+                 bpm -> payment++: Создание MoneyTransfer
+                 payment--
+                 bpm -> payment++: Создание соответствующей\nMoneyTransferOperation\n(UNIDENTIFIED_INCOMING_TRANSFER)
+                 payment--
+                 note right
+                     На данном этапе деньги зависают на
+                     невыясненных расчетах. Дополнительного
+                     зеркалирования в ХАБ не происходит,
+                     т.к. платеж там и так висит в нераспределенных.
+                     Так же процесс REPLENISHMENT "подвисает" в ожидании
+                     решения по платежу
+                 end note
+        end
+    end
+    == Блок обработки невыясненных платежей.\n Далее будет описан блок распределения невыясненных платеже.\nАвтоматический возврат отсутствует(временно)\nтолько ручной разбор.\n\nВозможные решения:\nЗачислить на кошелек;\nЗачислить на договор вкалад(резерв);\nВернуть отправителю, в т.ч. по свободно указываемым реквизитам. ==
+    oper -> bpm++ : REST запрос на распределние невыясненного платежа:
+    alt Зачислить на кошелек
+        bpm -> payment++: Создание MoneyTransfer
+                            payment--
+                            bpm -> payment++: Создание соответствующей\nMoneyTransferOperation\n(UNIDENTIFIED_TO_WALLET)
+                            payment--
+                            bpm --> hub++ : Вызов соответствующего\nREST для зеркалирования учета.
+
+                            hub -> hub : Создать запись в таблице\nwallet_incoming, ИД созданной\nзаписи добавить\nв expected_wallet_incoming\nв поле wallet_incoming_id
+                            hub -> hub : Создать запись\nв client_account_transaction\nи соответствующие связи
+                            hub -> hub : Создать\обновить запись\nв client_account_balance\nв соответствующем операционном дне.
+                            hub -> hub : Установить ПД статус PROCESSED
+                            hub--
+    else Зачислить на вклад
+        bpm -> payment++: Создание MoneyTransfer
+                                    payment--
+                                    bpm -> payment++: Создание соответствующей\nMoneyTransferOperation\n(UNIDENTIFIED_TO_RESERVE)
+                                    payment--
+                                    bpm --> hub++ : Вызов соответствующего\nREST для зеркалирования учета.
+
+                                       hub -> hub : Создать запись в таблице\invoice_income,\nгде ИД инвойса = ИД договора вклада.
+                                       hub -> hub : Установить ПД статус PROCESSED
+                                hub--
+    else Вернуть отправителю
+        bpm -> payment++: Создание соответствующей\nMoneyTransferOperation\n(UNIDENTIFIED_INCOMING_TRANSFER_COMPLETION )
+        payment--
+        bpm--
+        bpm -> bpm++ : Завершение процесса REPLENISHMENT\nи вызов процесса REFUND\nвыполняющего возврат средств.
+        note right
+            Пропускаю описание технической реализации
+            возврата, с проверками раб.времени НРД
+            и прочими проверками.
+        end note
+                    bpm -> payment++: Создание MoneyTransfer
+                    payment--
+
+        bpm -> nsd++ : Отправка заявки на исходящий платеж (pain.001)
+        nsd -> nsd : Создание записи в таблице transactions ...
+        nsd -> nrd++ : Отправка pain.001
+        return
+        alt camt.054.outbound
+            nrd -> nsd++ : camt.054.outbound
+            nsd -> dict++ : Получение\nреквизитов Н\С
+            return
+            alt Платеж на номинальный счет?
+                nsd -> dict++ : Преобразование SWIFT\nбанка отправителя
+                return
+                alt БИК получен?
+                    nsd -> hub++ : отправка преобразованного\ncamt.054.inbound
+                else
+                    nsd --> error.topic++
+                    error.topic--
+                end
+            else Платеж не на номинальный счет.
+                nsd --> skip++
+                nsd--
+                skip--
+                nsd--
+            end
+            hub -> hub++ : Учет в хабе
+            hub -> hub : Создание записи в\noutgoing-payment-document-psbr
+            hub -> hub : Создание транзакции в\ncore-account-transactions
+            hub -> hub : Изменение баланса в\ncore-acount-balance\nза соответствующий\nоперационный день.
+            hub -> hub : Учет по бизнес-логике
+            alt В ХАБе есть ожидание данного платежа
+                hub -> hub : Учет в рамках БП
+                hub -> payment : Отправка в соответствующий зеркальный процесс
+            else В хабе логики нет
+                hub -> hub : Установка платежу статуса COMPLETED
+                hub -> bpm : Отправка camt.054.outbound
+            end
+            bpm -> payment++: Создание соответствующей\nMoneyTransferOperation\n(UNIDENTIFIED_INCOMING_TRANSFER_REFUND )
+            payment--
+            bpm -> payment++: Исходящему MoneyTraansfer\nпроставить параметр\nparrentMoneyTransferId = ИД исходного MoneyTransfer
+            payment--
+            bpm --> hub : Вызов соответствующего\nREST для зеркалирования учета.
+            hub -> hub : Создать запись в таблице\nfull_refund_order, и связать исходящий и входящий ПД
+            hub -> hub : Установить исходному\nПД статус PROCESSED
+        else Ошибка отправки.
+            bpm->bpm : Ручной процесс.
+        end
+        hub--
+        hub--
+        hub--
+        bpm--
+    end
+end
+@enduml

@@ -1,0 +1,65 @@
+@startuml
+
+hide circle
+skinparam linetype ortho
+
+entity codes {
+id
+promotion_id
+lead_id
+customer_id
+code
+status
+created_at
+updated_at
+order_id
+version
+bonus_amount
+bonus_calc_first_param
+}
+
+entity promocodes {
+id
+promotion_id
+code
+customer_id
+expires_at
+create_timestamp
+}
+
+entity promocodes_usage_log {
+id
+event_id
+customer_id
+promocode_id
+create_timestamp
+}
+
+entity events {
+id
+idempotence_id
+event_timestamp
+type
+product_type
+correlation_id
+customer_id
+params
+
+}
+
+entity bonuses {
+id
+state
+promotion_id
+correlation_id
+customer_id
+amount
+created_at
+updated_at
+}
+
+codes --> promocodes
+codes --> promocodes_usage_log
+
+
+@enduml

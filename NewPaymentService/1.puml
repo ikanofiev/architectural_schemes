@@ -1,0 +1,214 @@
+@startuml
+hide circle
+skinparam linetype ortho
+entity promotions {
+    * [PK] guid
+    --
+    * product: product.id
+    * title: string(255)
+    * promotion_name: string
+    ** ???rules_url: string(255) | NULL **
+    * start_datetime: timestamp
+    end_datetime: timestamp
+    * status: promotion_status.id
+    * product_type: product_type.id
+    * promotion_direction: promotion_direction.id
+    * promotion_type: promotion_type.id
+    * payment_type: payment_type.id
+    * created_at: timestamp
+    * updated_at: timestamp
+    * dmn_rules: dmn_rules.id
+
+}
+entity promotion_use {
+== СНО ==
+    ???
+}
+entity promotion_limits {
+== Лимиты ==
+    ???
+}
+
+entity promotion_promocode_based {
+    * [PK] guid
+    --
+    * promocode_redeem_type : \nenum(none, one_time, one_time_per_customer)
+    * is_personal
+    * generation_type : enum (none, on_demand)
+    generate_from: timestamp
+    generate_to: timestamp
+    code_generation_template : string (ex code_mask)
+    code_expiration_in_days : int
+    created_at: timestamp
+    updated_at: timestamp
+}
+entity promocodes {
+    * [PK] guid
+    --
+    * promotion_id : UUID [FK]
+    * code : string
+    customer_id : uuid
+    expires_at: timestamp
+    created_at: timestamp
+}
+entity promocodes_usage_log {
+    * [PK] guid
+    --
+    * event_id
+    * customer_id
+    * promocode_id : UUID
+    created_at: timestamp
+}
+entity bonuses {
+id: UUID
+--
+state (enum)
+promotion_id: UUID
+correlation_id: {{ contractId }}
+customer_id: uuid
+amount: decimal
+...
+created_at: timestamp
+updated_at: timestamp
+}
+entity bonuses_history {
+    * id
+    --
+    * bonus_id
+    * event_id
+    * created_at
+    * state
+}
+entity bonuses_deferred_state_transitions {
+id: UUID
+--
+bonus_id: UUID
+state_transition: enum
+delayed_until: timestamp
+status: enum(NEW|COMPLETED|CANCELLED)
+...
+created_at: timestamp
+* updated_at: timestamp
+}
+entity events {
+    id: uuid
+    --
+    idempotence_id: text
+    event_timestamp: datetime
+    type: enum
+    product_type: enum(platform_deposits | external_deposits)
+    customerId: uuid
+    correlationId: text
+    params: jsonb
+}
+note top
+    idempotence-id: {{ orderId }}
+    eventTimestamp: ...
+    type: "deposit-activation"
+    product_type: "DEPOSIT"
+    customerId: XXXX-XXXX
+    correlationId: {{ contractId }}
+    params: {
+        promoCode?: XXXX-XXXX
+        firstDeposit: true
+        orderId: XXXX-XXXX
+        contractId: XXXX-XXXX
+        amount: ...
+        depositDuration: ...
+        depositRate: ...
+    }
+end note
+entity promotion_event_configs {
+    id: UUID
+    --
+    * promotion_id: UUID
+    * event_type: text
+    * state_transition: enum
+    rules: binary
+}
+note top
+    state_transition values:
+    - init
+    - created_to_cancelled
+    - created_to_activated
+    - activated_to_processing
+    - processing_to_finished
+    - activated_to_cancelled
+    - processing_to_cancelled
+end note
+entity dmn_templates {
+    id: UUID
+    --
+    name: string
+    rules: string (XML)
+    status: enum(new | in_progress | active)
+}
+entity dmn_rules {
+    id: UUID
+    --
+    rules: string (XML)
+    dmn_template: dmn_templates.id
+}
+entity promotion_status{
+    id: uuid
+    --
+    status_name: string
+    status_code: enum(new | under_revision |\n cancelled | awaiting_confirmation |\n active | completed | completed_early)
+}
+
+entity product{
+    id: uuid
+    --
+    name: string
+    code: enum(platform_deposit | credit | platform_insurance_mortgage | \n platform_insurance_osago | investment | non_product | platform_insurance)
+}
+
+entity product_type{
+    id: uuid
+    --
+    name: string
+    code: enum(platform | non_platform | non_product)
+}
+
+entity payment_type{
+    id: uuid
+    --
+    name: string
+    code: enum(promotional_deposits_credit | promotional_osago |\n promotional_insurance_except_osago | cash_compensation |\n marketing_promotional_for_limited_range)
+}
+
+entity promotion_direction{
+    id: uuid
+    --
+    name: string
+    code: enum()
+}
+
+entity promotion_type{
+    id: uuid
+    --
+    name: string
+    code: enum(promocode_based | referal | loyalty_card | other | ....)
+}
+
+
+promotions ||--|| payment_type
+promotions ||--|| promotion_type
+promotions ||--|| promotion_direction
+promotions ||--|| product_type
+promotions ||--|| product
+promotions ||--|| promotion_status
+promotions ||--|| dmn_rules
+dmn_templates ||--o{ dmn_rules
+promotions ||--o{ promotion_limits
+promotion_limits ||--o{ promotion_use
+promotions ||--o| promotion_promocode_based
+promotion_promocode_based ||--o{ promocodes
+promocodes ||--o{ promocodes_usage_log
+events ||--o| promocodes_usage_log
+promotions ||--o{ promotion_event_configs
+promotions ||--o{ bonuses
+bonuses ||--|{ bonuses_history
+bonuses ||--o{ bonuses_deferred_state_transitions
+events ||--o{ bonuses_history
+@enduml

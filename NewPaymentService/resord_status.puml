@@ -1,0 +1,10 @@
+@startuml
+'https://plantuml.com/use-case-diagram
+
+(*) --> [Устанавливается при записи реестра] New
+New --> [Запись взята в работу. ] Processing
+Processing --> [Успешно обработан.\nСредства зачисленны\n на кошелек.] Processed
+Processing --> [Отклонен.] Rejected
+Processed --> (*)
+Rejected --> (*)
+@enduml

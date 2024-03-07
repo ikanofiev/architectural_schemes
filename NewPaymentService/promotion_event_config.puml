@@ -1,0 +1,57 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+
+actor "Продукт" as product
+
+participant "Жизненный\nцикл\nбонуса" as bonus
+participant "Собтие" as event
+participant "Промоакции" as actions
+participant "Промокоды\nили карты\nлояльности" as codes
+
+
+participant "История события" as history
+product -> bonus++ : bonus-event
+bonus -> event++ : Есть ли в\npromotion_event_config\nтакие типы события
+alt Есть с типом init
+    loop для всех найденых записей
+        event ->  actions++ : Удовлетворяет ли событие\nнастройкам "Промоакции"
+
+        alt акция на промокодах\лояльности?
+            actions -> history : loging
+            actions -> codes++ : проверить промокод,\nесли код не валиден и т.п.\ngoto следующая акция :)
+            return
+        end
+        return
+        alt Событие удовлетворяет\nпараметрам Акции и дочерним\nпараметрам(промокоды\лояльность)
+            event -> event : Попробовать рассчитать  бонуса
+            event -> event : Результат расчета в список.
+            event  -> history : loging
+        end
+    end
+    event -> actions++ : Отправить список\nрассчитанных бонусов\nна проверку:
+    event--
+    actions -> actions : Проверить по матрице\nсовместимости +\nлогика максимального бонуса\nпри прочих равных
+    actions  -> history : loging
+    actions -> bonus : Записать начисленный бонус.
+    actions--
+else Есть с типом activation
+    bonus -> bonus : Найти бонус связанный с\nсобытием init с\ncorrelationId из текущего события
+    alt нашлось
+        bonus -> bonus :Изменить статус
+        bonus -> history : loging
+    end
+
+
+else Есть с типом cancel
+    bonus -> bonus : Найти бонус связанный\nс событием init с\ncorrelationId из текущего события
+    alt нашлось
+        bonus -> bonus :Изменить статус
+        bonus -> history : loging
+    end
+
+
+end alt
+
+
+@enduml

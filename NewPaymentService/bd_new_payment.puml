@@ -1,0 +1,427 @@
+@startuml
+
+namespace CORE {
+
+namespace core_accounts {
+entity core_accounts #LightGray  {
+Корневые счета. Справочник.
+==
+* id : uuid
+==
+* number : string
+* bic : string
+* create_timestamp : date_time
+* update_timestamp : date_time
+}
+
+entity core_accounts_transactions {
+Транзакции по корневым счетам
+==
+* id : uuid
+==
+* core_accounts_id : uuid
+* payment_document_id : uuid
+  income_amount : number
+  expense_amount : number
+* currency :
+* value_date : date_time
+* create_timestamp : date_time
+
+
+}
+
+entity balance_core_accounts {
+Балансы корневых счетов
+==
+* id : uuid
+==
+* core_accounts_id : uuid
+* amount :
+* currency :
+* oper_day : date
+* create_timestamp : date_time
+* update_timestamp : date_time
+}
+}
+
+namespace PSBR {
+entity incoming_payment_document_psbr {
+Входящий платежный документ ПСБР
+==
+* id : uuid
+==
+* create_timestamp : date_time
+* update_timestamp : date_time
+* number : number (9)
+* date : date
+* value_date : date
+* external_id : string
+* purpose : string
+* amount : number
+* currency : enum
+* status : enum
+==
+Блок отправителя
+==
+* sender_info : string
+* sender_account : string
+* sender_bic : string
+* sender_inn : string
+==
+Блок получателя
+==
+* receiver_info : string
+* receiver_account : string
+* receiver_bic : string
+
+}
+
+entity outgoing_payment_document_psbr {
+Исходящий платежный документ
+==
+* id : uuid
+==
+* create_timestamp : date_time
+* update_timestamp : date_time
+* number : number (9)
+* date : date
+* value_date : date
+* external_id : string
+* purpose : string
+* amount : number
+* currency : enum
+* status : enum
+==
+Блок отправителя
+==
+* sender_info : string
+* sender_account : string
+* sender_bic : string
+==
+Блок получателя
+==
+* receiver_info : string
+* receiver_account : string
+* receiver_bic : string
+
+}
+
+entity incoming_payment_document_psbr_history {
+История статуса входящего платежного документа ПСБР
+==
+* id : uuid
+==
+* payment_document_id : uuid
+* status : enum
+* create_timestamp : date_time
+}
+
+entity outgoing_payment_document_psbr_history {
+История статуса исходящего платежного документа ПСБР
+==
+* id : uuid
+==
+* payment_document_id : uuid
+* status : enum
+* create_timestamp : date_time
+}
+
+}
+namespace SBP {
+entity incoming_payment_document_sbp {
+Входящий платежный документ СБП
+==
+Блок платежа
+==
+Блок отправителя
+==
+Блок получателя
+}
+
+entity incoming_payment_document_sbp_history {
+История входящего платежного документа СБП
+==
+* id : uuid
+==
+* payment_document_id : uuid
+* status : enum
+* create_timestamp : date_time
+}
+}
+
+}
+
+namespace STATEMENT {
+
+entity statements  {
+Корневые счета. Справочник.
+==
+* id: uuid
+--
+* number : number
+* date_time : dateTime
+* account : string
+* incoming_balance : number
+* outgoing_balance : number
+* incoming_balance_date : date
+* outgoing_balance_date : date
+* is_completed : boolean
+* total_pages : number
+* create_timestamp: timestamp
+* update_timestamp: timestamp
+}
+
+entity statements_entries {
+Обороты по корневым счетам
+==
+* id: uuid
+--
+* statements_record_id : uuid
+* direction : enum
+* value_date : date
+* external_id : number
+* transaction_type : enum
+* pd_number : number
+* amount : number
+* sender_bic : string
+* sender_account : string
+* receiver_bic : string
+* receiver_account : string
+* description	: string
+* create_timestamp: timestamp
+* update_timestamp: timestamp
+}
+entity statements_audit
+{
+* id: uuid
+--
+* statement_id: uuid	Ссылка на ИД записи о выписке
+* page_number	string	Номер страницы
+* is_last	boolean	Признак последней страницы.
+* create_timestamp: timestamp
+* update_timestamp: timestamp
+}
+entity statements_reconciliation
+{
+* id: uuid
+--
+* create_timestamp: timestamp
+* update_timestamp: timestamp
+}
+
+}
+
+
+
+namespace Registry {
+entity registry_document {
+Реестр документ
+==
+* id : uuid
+==
+* payment_document_id : uuid
+==
+* number : string
+* date
+* create_timestamp : date_time
+* update_timestamp : date_time
+* status : enum
+}
+entity registry_history {
+История операций по реестру
+==
+* id : uuid
+==
+* registry_document_id : uuid
+* registry_document_records_id : uuid
+* registry_document_status : enum
+* registry_document_records_status : enum
+* create_timestamp : date_time
+}
+entity registry_document_records {
+Реестр. Записи.
+==
+* id : uuid
+==
+* registry_document_id : uuid
+* customer_id : uuid
+* amount : number
+* currency : enum
+  client_account_transactions_id : uuid
+* create_timestamp : date_time
+* update_timestamp : date_time
+* status : enum
+  optionalKeys : jsonb
+}
+
+entity registry_refund {
+Реестр. Возврат излишков.
+==
+* id : uuid
+==
+* payment_document_id : uuid
+==
+* registry_document_id : uuid
+* amount : number
+* currency : enum
+* create_timestamp : date_time
+* update_timestamp : date_time
+* status : enum
+
+}
+
+}
+
+namespace Wallets {
+
+
+
+
+entity client_account_transactions {
+Обороты по кошельку клиента
+==
+* id : uuid
+==
+  incoming_payment_document_psbr_id : uuid
+==
+* customer_id : uuid
+  income_amount : number
+  expense_amount : number
+* currency :
+* value_date : date_time
+* create_timestamp : date_time
+
+}
+entity client_account_balance {
+Балансы кошелька клиента
+==
+* id : uuid
+==
+* customer_id : uuid
+* amount :
+* currency :
+* oper_day : date
+* create_timestamp : date_time
+* update_timestamp : date_time
+
+}
+}
+
+namespace Invoices {
+entity invoice_income {
+Поступления на счет на оплату
+==
+* id : uuid
+==
+* document_id : uuid
+* document_type : enum
+
+==
+* invoice_id : uuid
+* amount :
+* create_timestamp : date_time
+}
+
+entity invoice {
+
+
+
+Инвойс\счет на оплату
+==
+* id : uuid
+==
+* customer_id : uuid
+
+==
+  outgoing_document_id : uuid
+  outgoing_document_type : enum (PSBR)
+==
+  wallet_incoming_id : uuid
+==
+* amount :
+* currency :
+* end_date : date
+* status : enum
+* create_at : dateTime
+}
+}
+
+entity refund_undefined_funds {
+Возвраты не выясненных средств
+==
+* id : uuid
+* incoming_payment_document_psbr_id : uuid
+* outgoing_payment_document_psbr_id : uuid
+}
+
+'Внутренние взаимодействия корневого домена
+core_accounts::id ||--o{ core_accounts_transactions::core_accounts_id #blue
+core_accounts::id ||--o{ balance_core_accounts::core_accounts_id #blue
+incoming_payment_document_psbr::id ||--o{ incoming_payment_document_psbr_history::payment_document_id #Teal
+outgoing_payment_document_psbr::id ||--o{ outgoing_payment_document_psbr_history::payment_document_id #Teal
+incoming_payment_document_sbp::id ||--o{ incoming_payment_document_sbp_history::payment_document_id #Teal
+incoming_payment_document_psbr::id ||--|| core_accounts_transactions::payment_document_id #green
+outgoing_payment_document_psbr::id ||--|| core_accounts_transactions::payment_document_id
+
+'Внутренние взаимодействия домена выписки\сверки
+statements::id ||--o{ statements_entries::statements_record_id
+statements::id ||--o{ statements_audit::statement_id
+
+'Связь выписки и учета ПД в корневом домене
+statements_entries::external_id ||--|| incoming_payment_document_psbr::external_id
+statements_entries::external_id ||--|| outgoing_payment_document_psbr::external_id
+
+'Внутренние взаимодействия домена Реестров
+registry_document::id ||--o{ registry_history::registry_document_id #blue
+registry_document::id ||--o{ registry_document_records::registry_document_id #blue
+registry_document::id ||--o{ registry_refund::registry_document_id #blue
+registry_document_records::id ||--o{ registry_history::registry_document_records_id #blue
+
+'Связь платежа и реестра
+incoming_payment_document_psbr::id ||--|| registry_document::payment_document_id #green
+
+'Разнесение реестра на кошельки
+registry_document_records::client_account_transactions_id ||--|| client_account_transactions::id #blue
+
+'Возврат излишков по реестру
+outgoing_payment_document_psbr::id ||--|| registry_refund::payment_document_id
+
+'Внутренние взаимодействия домена Кошельков
+
+'Учет входящего платежа на кошельке
+incoming_payment_document_psbr::id ||--|| client_account_transactions::incoming_payment_document_psbr_id #green
+
+
+'Внутренние взаимодействия домена Счетов
+invoice::id ||--o{ invoice_transactions::invoice_id
+
+'Учет входящего платежа под счет на оплату
+incoming_payment_document_psbr::id ||--|| invoice_transactions::incoming_payment_document_psbr_id #green
+
+
+
+'Оплата счета (исходящее ПП)
+outgoing_payment_document_psbr::id ||--|| invoice_transactions::outgoing_payment_document_psbr_id #green
+
+'Возврат с счета на кошелек (возврат, излишки)
+'Учет перевода средств с кошелька под счет на оплату
+invoice_transactions::client_account_transactions_id ||--|| client_account_transactions::id #red
+
+'Возврат невыясненных средств
+incoming_payment_document_psbr::id ||--|| refund_undefined_funds::incoming_payment_document_psbr_id #red
+outgoing_payment_document_psbr::id ||--|| refund_undefined_funds::outgoing_payment_document_psbr_id #green
+
+@enduml
+
+
+
+
+
+
+
+
+
+
+
+
+

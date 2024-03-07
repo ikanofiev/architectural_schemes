@@ -1,0 +1,78 @@
+@startuml
+namespace Invoices {
+entity invoice_income {
+Поступления на счет на оплату
+==
+* id : uuid
+==
+* document_id : uuid
+* document_type : enum
+
+==
+* invoice_id : uuid
+* amount :
+* create_timestamp : date_time
+}
+
+entity invoice {
+
+
+
+Инвойс\счет на оплату
+==
+* id : uuid
+==
+* customer_id : uuid
+
+==
+  outgoing_document_id : uuid
+  outgoing_document_type : enum (PSBR)
+==
+  wallet_incoming_id : uuid
+==
+* amount :
+* currency :
+* end_date : date
+* status : enum
+* create_at : dateTime
+}
+}
+
+entity clients_domain{
+Домен клиентских средств
+==
+wallet_incoming_id : Поступления на кошелек.
+wallet_outgoing_id : Транзакции по кошелькам клиентов
+}
+
+entity core_account_domain{
+Домен корневых счетов
+==
+outgoing_payment_document : Исходящий платежный документ
+incoming_payment_document : Входящий платежный документ
+}
+
+core_account_domain::incoming_payment_document  ||--|| invoice_income::document_id #green
+core_account_domain::outgoing_payment_document ||--|| invoice::outgoing_document_id #green
+invoice::id ||--o{ invoice_income::invoice_id
+invoice::wallet_incoming_id ||--|| clients_domain::wallet_incoming_id #red
+invoice_income::document_id ||--|| clients_domain::wallet_outgoing_id #red
+
+@enduml
+
+entity invoice_transactions {
+Обороты по счету на оплату
+==
+* id : uuid
+==
+  incoming_payment_document_psbr_id : uuid
+  outgoing_payment_document_psbr_id : uuid
+  client_account_transaction_id : uuid
+==
+* invoice_id : uuid
+  income_amount : number
+  expense_amount : number
+* currency :
+* value_date : date_time
+* create_timestamp : date_time
+}

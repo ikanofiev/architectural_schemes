@@ -1,0 +1,33 @@
+@startuml
+hide circle
+skinparam linetype ortho
+
+
+
+
+
+entity messages{
+* id : uuid
+* correlation_id : uuid
+* direction : enum (FROM_NSD\TO_NSD)
+* event_type : enum ()
+* message : jsonb
+* status : enum (PROCESSED, NEW, SENT)
+* is_manual : boolean
+  login : string
+* create_at : date_time
+* update_at : date_time
+}
+
+entity message_history{
+* id : uuid
+* message_id : uuid
+* status : enum
+  login : string
+* create_at : dateTime
+
+}
+
+messages ||-[bold,#blue]-o{ message_history
+
+@enduml

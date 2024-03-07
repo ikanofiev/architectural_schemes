@@ -1,0 +1,51 @@
+@startuml
+
+
+skinparam handwritten true
+
+
+
+participant "BANK" as bank
+participant "НРД" as nrd
+
+participant "mp-sys-nsd" as nsd
+
+participant "mp-sys-bpm" as bpm
+participant "mp-sys-payment" as payment
+bpm -> bpm++ : Процесс открцытия вклада.
+bank -> bpm : Подтверждение открытия вклада.
+bpm -> bpm : запуск ReplenisAndAct + LimitReaching
+bank -> nrd : camt054
+nrd -> nsd : camt054
+nsd -> "pl-payment-hub" : nsd-money-transfer-receiving
+"pl-payment-hub" -> "pl-payment-hub" : Зачисляем на резерв
+"pl-payment-hub" -> bpm : Есть деньги.
+bpm -> payment : создает манитрансвер, платежку, операцию зачисления на резерв.
+bpm -> bpm : Сообщил в LimitReaching что изменился баланс.
+bpm -> bpm : limitReaching пересчитывает резерв, если хватает WaitForMonyeInBank и запуск mainprocess
+bpm -> bpm : Проверяет возможность отправки средств
+bpm -> payment : Create MoneyTransfer(NEW)
+bpm -> payment : Hold
+bpm -> nsd : pain001
+nsd -> nrd : pain001
+====
+bank -> bpm : int-b-005-1 Replenishment
+====
+nrd -> nrd : магия
+nrd -> bank : через ПСБР
+nrd -> nsd : camt054_2 (копия pain001)
+nsd -> nsd : match
+nsd -> "pl-payment-hub" :  nsd-money-transfer-receiving(camt054_2)
+"pl-payment-hub" -> "pl-payment-hub" : OutgoingPaymentDocumentPSBR
+"pl-payment-hub" -> bpm :  money-transfer-receiving(camt054_2)
+bpm -> bpm : MainProcess
+bpm -> payment : создание операции, обновление платежки.
+bpm -> "pl-payment-hub" : Связывает платежку и инвойс. Инвойс при этом уходит в completed
+
+
+====
+
+bank -> bpm : int-b-005-1 Закрытие\досрочка
+bpm -> bpm : стартует соответствующий процесс.
+
+@enduml

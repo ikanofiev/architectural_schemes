@@ -1,0 +1,45 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+
+actor "Ингуру" as ing
+participant CRAML as craml
+participant "mp-inshurance" as insh
+participant "pl-bonuses" as bonuses
+
+
+ing -> insh++ : REST \...\metric\nполучаем продуктовую\nметрику от "Ингуру"
+insh -> insh++ : Сохраняем asis в бд сервиса.
+insh -> craml++: GET ..\customer\nпоиск клиента\nпо паспортным данным.
+return
+alt customer найден,\nстатус корректный
+    return
+    alt wallet найден
+        insh -> insh : Формирование метрики
+        insh ->  bonuses++ : Продуктовое событие от "Ингуру"\nчерез топик bonus-event
+
+        alt В таблице events нет\nсобытия с таким же correlationId
+            bonuses -> bonuses++ : Создание события в таблице events\nпо аналогии с событиями по топику.\nСвязывание промокода с событием..
+        else В таблице events есть\nсобытие с таким же correlationId
+            bonuses -> bonuses++ : Обновление существующего объекта.
+        end
+            bonuses -> bonuses : Расчет бонуса
+
+
+
+    end alt
+    bonuses--
+    bonuses--
+    bonuses--
+
+else не найден wallet или клиент\nв не корректном статусе или не найден
+        insh -> insh : Формирование метрики БЕЗ данных клиента
+        insh -> bonuses++ : REST \...\assign\n- новая версия запроса\nприменения промокода с контрактом,\nаналогичным контракту "bonus-event"
+        insh--
+        insh--
+        bonuses -> bonuses++ : Создание события в таблице events\nпо аналогии с событиями по топику.\nСвязывание промокода с событием.\nБонус и проверки расчета не производятся,\nтак как отсутствует клиент\кошелек.
+end alt
+bonuses--
+bonuses--
+
+@enduml

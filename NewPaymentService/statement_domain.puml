@@ -1,0 +1,75 @@
+@startuml
+namespace STATEMENT {
+
+entity statements  {
+Выписка, документ
+==
+* id: uuid
+==
+* status : string(enum)
+==
+* number : number
+* date_time : dateTime
+* account : string
+* incoming_balance : number
+* outgoing_balance : number
+* incoming_balance_date : date
+* outgoing_balance_date : date
+* is_completed : boolean
+* total_pages : number
+* create_timestamp: timestamp
+* update_timestamp: timestamp
+}
+
+entity statements_entries {
+Выписка. Записи
+==
+* id: uuid
+==
+* status : string(enum)
+==
+* statements_record_id : uuid
+* direction : enum
+* value_date : date
+* external_id : number
+* transaction_type : enum
+* pd_number : number
+* amount : number
+* sender_bic : string
+* sender_account : string
+* receiver_bic : string
+* receiver_account : string
+* description : string
+* create_timestamp: timestamp
+* update_timestamp: timestamp
+}
+entity statements_audit
+{
+Выписка. Аудит
+==
+* id: uuid
+==
+* statement_id: uuid	Ссылка на ИД записи о выписке
+* page_number	string	Номер страницы
+* is_last	boolean	Признак последней страницы.
+* create_timestamp: timestamp
+* update_timestamp: timestamp
+}
+
+
+}
+
+entity core_account_domain{
+Домен корневых счетов
+==
+outgoing_payment_document : Исходящий платежный документ
+incoming_payment_document : Входящий платежный документ
+}
+
+statements::id ||--o{ statements_entries::statements_record_id
+statements::id ||--o{ statements_audit::statement_id
+
+statements_entries::external_id ||--|| core_account_domain::outgoing_payment_document
+statements_entries::external_id ||--|| core_account_domain::incoming_payment_document
+
+@enduml

@@ -1,0 +1,106 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+
+actor "Клиент" as client
+
+participant "Продуктовый сервис" as product
+
+box pl-bonuses
+participant "Жинзненный цикл события" as event
+database "promotion_event_configs" as pec
+database "promotions" as prom
+participant "Модуль обработки DMN" as dmn
+participant "Модуль выбора лучшего бонуса\nматрица пересечений" as max
+database "bonuses" as bonus
+database "История события" as history
+end box
+
+client -> product : Приобретение продукта
+product -> event++ : Продуктовое событие.
+note right
+                                             Продуктовое событие. Содержит ТИП события
+                                             Дополнительные параметры продукта для
+                                             корректного рассчета бонуса.
+                                             Может содержать промокод или карту лояльности.
+                                         end note
+== Обработка события СОЗДАЮЩЕГО бонус (init) ==
+
+event -> pec++ : select * from ... where event_type = event.eventType and state_transition = INIT
+return Массив (promotions) промоакций подходящих под данный тип события.
+alt promotions = null
+    event -> history : Не найдено подходящих промоакций.
+else promotions != null
+    loop for each promotions
+        event -> prom++ : get params by promotion_id
+        return : параметры акции
+        event -> event : Производим сравнение события и параметров акции.
+        alt event не подходит под акцию
+            event -> event : Сохраняем в памяти признак несоответствия.
+        else event не подходит акцию
+            event -> event : Сохраняем ИД акции в общий массив.
+        end
+    end loop
+    event -> event : Передаем массив(promotions) акций удовлетворяющих базовым условиям на следующий шаг обработки:
+end
+alt promotions = null
+        event -> history : Не найдено подходящих промоакций.
+else promotions != null
+    loop for each promotions
+        event -> dmn++ : Отправляем данные на расчет бонуса.
+        dmn -> dmn
+        return Результат расчета(summ)
+        alt  summ = null
+            event -> event : Сохраняем что по акции(х) расчет бонуса не удался.
+        else summ != null
+            event -> event : Сохраняем в памяти результат расчета.
+        end
+        event -> event : Передаем массив summ на следующий шаг.
+    end
+end
+alt summ = null
+        event -> history : Не найдено подходящих промоакций.
+else summ != null
+    loop for each summ(promotions)
+        event -> max++ : Проверка по матрице
+
+    end
+    alt summ > 1
+        max -> max : Выбрать максимальный рассчитанный бонуса
+    end
+    return : Результат проверки по матрице пересечений.
+    event -> event : Передаем результат на следующий шаг
+end
+alt summ = null
+    event -> history : Бонус не рассчитан
+else
+    event -> bonus++ : summ - передать рассчитаный бонус.
+    bonus -> bonus : status = NEW
+end
+bonus--
+
+== Обработка события с типом create_to_activate или create_to_cancel ==
+
+event -> pec++ : select * from ... where event_type = event.eventType and state_transition in (CREATED_TO_ACTIVATED, CREATED_TO_CANCELED)
+return Массив (promotions) промоакций подходящих под данный тип события.
+alt promotions = null
+    event -> history : Не найдено подходящих промоакций.
+else promotions != null
+    loop for each promotions
+        event -> bonus++ : get params by promotion_id and status "NEW"
+        return : bonuses[]
+        alt bonuses[] != null
+            loop for each bonuses[]
+                alt event.eventType = CREATED_TO_ACTIVATED
+                    event -> bonus : status == ACCTIVE
+                else event.eventType = CREATED_TO_CANCELED
+                    event -> bonus : status == CREATED_TO_CANCELED
+                end
+            end
+        end
+    end loop
+end
+
+
+
+@enduml

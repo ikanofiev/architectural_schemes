@@ -1,0 +1,434 @@
+@startuml
+hide circle
+skinparam linetype ortho
+
+
+namespace RegistryDomain {
+entity registry_document{
+== Реестр на выплату бонусов ==
+* id : uuid	ИД
+* version : integer Версия
+
+* create_timestamp : date_time
+* update_timestamp : date_time
+* registry_number : string Номер реестра
+* registry_date : date Дата реестра
+* registry_amount : number Сумма реестра без налога
+* registry_total_amount : number Сумма реестра с учетом налога
+* registry_tax : number Сумма налога
+* currency : enum(string) Валюта реестра
+* registry_file_name : string Наименование файла реестра
+* registry_type : string Тип реестра.
+* status : enum Статус обработки реестра
+== PaymentDocument ==
+payment_order_id: uuid Ссылка на заявку в pl-payment-hub
+payment_doc_number : string(6) Номер платежного документа по нумерации отправителя
+payment_doc_date : date	Дата платежного документа
+payment_sender_inn : string(12)	ИНН плательщика
+payment_sender_account : string(25)	Счет плательщика
+payment_sender_bic : string(9) БИК банка отправителя
+payment_sender_info	: string Наименование отправителя
+purpose : string Назначение платежа.
+== Внешние Реестры ==
+external_promotions_card_id : uuid ЛИбо связь с карточкой акции тут
+
+== Потенциально отключаемые поля ==
+
+
+
+}
+
+entity registry_document_history{
+* id : uuid
+* registry_document_id : uuid
+* registry_document_status : enum
+* create_timestamp : date_time
+
+== Данные оператора ==
+* system_code : string
+* login :
+* role :
+* action : (enum)
+
+}
+
+
+entity registry_document_record{
+Записи реестра
+* id :	 uuid ИД
+* version : integer Версия
+* create_timestamp : date_time Дата-время создания записи
+* update_timestamp : date_time Дата-время обновления записи
+* registry_document_id : uuid ИД документа реестра по нумерации Хаба
+* customer_id : uuid ИД клиента
+  record_key : string ИД записи реестра по нумерации источника
+* amount : number Сумма выплаты
+* total_amount : number Сумма с учетом налога
+* tax : number Сумма налога
+  purpose : string Назначение платежа
+* status : enum Статус обработки записи
+== Целевые поля связи с акциями ==
+  bonus_id : ссылка на сущность Бонус.\nв приоритете должна вернуть\nпри выгрузке два параметра:\nНазвание акции и вид-выплаты(enum).
+
+== Потенциально отключаемые поля ==
+  promotion_id : ссылка на Акцию\nв приоритете должна вернуть\nпри выгрузке два параметра:\nНазвание акции и вид-выплаты(enum).
+  code_id :
+  contract_id
+
+== Поля ориентированные на работу с внешними реестрами ==
+  external_promotion_accrual_date : Дата применения бонуса на клиента. (date_promocod)
+
+}
+note right
+Первая секция:
+        поля постоянные и не изменяемые.
+        Во всяком случае пока видится так.
+Вторая секция:
+        целевые поля для автоматизации начислений.
+Третья секция:
+        ныне существующие поля,
+        но потенциально исключаемые
+        из использования.
+Четвертая секция:
+        "временные" поля, либо сохранятся
+        для работы с внешними реестрами.
+
+end note
+
+
+
+entity registry_document_record_history{
+* id : uuid
+* registry_document_record_id : uuid
+* registry_document_record_status : enum
+* create_timestamp : date_time
+== Данные оператора ==
+* system_code : string
+* login :
+* role :
+
+}
+
+}
+
+namespace PromocodesDomain {
+
+entity promotion_promocode_based {
+    * [PK] **guid**
+    --
+    * promocode_redeem_type : \nenum(none, one_time, one_time_per_customer)
+    * is_personal
+
+    * generation_type : enum (none, on_demand)
+    generate_from: timestamp
+    generate_to: timestamp
+    code_generation_template : string (ex code_mask)
+
+    code_expiration_in_days : int
+
+    **created_at**: timestamp
+    **updated_at**: timestamp
+}
+entity promocodes {
+    * [PK] **guid**
+    --
+    * **promotion_id** : UUID [FK]
+    * **code** : string
+    customer_id : uuid
+    expires_at: timestamp
+    **created_at**: timestamp
+}
+entity promocodes_usage_log {
+    * [PK] **guid**
+    --
+    * event_id
+    * customer_id
+    * promocode_id : UUID
+    **created_at**: timestamp
+}
+
+}
+
+
+namespace PromotionsDomain {
+
+entity promotions {
+    * [PK] **guid**
+    --
+    * **type**: enum(promocode_based|referral|loyalty_card|external_partner_promocode_base)
+    * **title**: string(255)
+    rules_url: string(255) | NULL
+    * **start_datetime**: timestamp
+    **end_datetime**: timestamp
+    * **status**: enum(active | not_active)
+    **product_type**: enum(platform_deposits | external_deposits)
+    * ** product_type_code** : string
+    * **reestr_code_name** : string
+    * **payout_type** : enum
+    * **promotion_name** : !WTF!
+    * **created_at**: timestamp
+    * **updated_at**: timestamp
+}
+
+entity promotion_use {
+== СНО ==
+    * [PK] id **guid**
+    * [FK] **registry_id**
+    * [FK] promotion_limits_id
+	* amount
+    * amount_before_tax
+	* amount_after_tax
+    * period_code
+    * date : Дата урегулирования
+    * status (enum)
+	* creation_time
+	* update_time
+	* manual_oebs
+}
+
+
+entity promotion_limits {
+== Лимиты ЗНП ==
+    * [PK] id **guid**
+    * [FK] promotion_id
+	  znp_id **OEBS id**
+    * amount
+    * start_date
+    * end_date
+    * status (enum)
+    * number_znp : номер ЗНП
+	  partner_name
+      nds
+	* creation_time
+	* update_time
+	* manual_oebs
+	* payment_direction
+}
+
+entity promotion_event_configs {
+    **id**: UUID
+    --
+    * promotion_id: UUID
+    * event_type: text
+    * state_transition: enum
+    rules: binary
+}
+note top
+    state_transition values:
+    - init
+    - created_to_cancelled
+    - created_to_activated
+    - activated_to_processing
+    - processing_to_finished
+    - activated_to_cancelled
+    - processing_to_cancelled
+end note
+
+entity promotions_audit{
+* id : uuid
+* promotions_id
+* login
+* role
+* status
+  action
+* create_timestamp
+}
+
+
+entity external_documents{
+== Справочник приказов\распоряжений ==
+* id : uuid
+* promotions_id : uuid
+* number
+* start_date
+* expiration_date
+* url : uuid
+* document_type : string(enum) \\тип документа. Приказ\распоряжение и т.п.
+* is_active : boolean
+====
+* create_timestamp : date_time
+* update_timestamp : date_time
+
+}
+entity tmp_documents{
+== склад бинарников ==
+* id
+* document_id
+* document_type
+* binary_date
+* create_timestamp
+* expiration_date : годен до
+}
+
+}
+
+namespace BonusDomain {
+entity bonuses {
+  * **id**: UUID
+  --
+  * **state** (enum)
+  * **promotion_id**: UUID
+  * correlation_id: {{ contractId }}
+  * customer_id: uuid
+  * amount: decimal
+  ...
+  * **created_at**: timestamp
+  * **updated_at**: timestamp
+}
+entity bonuses_history {
+    * **id**
+    --
+    * bonus_id
+    * event_id
+    * created_at
+    * state
+}
+entity bonuses_deferred_state_transitions {
+  * **id**: UUID
+  --
+  * **bonus_id**: UUID
+  * state_transition: enum
+  * delayed_until: timestamp
+  * status: enum(NEW|COMPLETED|CANCELLED)
+  ...
+  * **created_at**: timestamp
+  * **updated_at**: timestamp
+}
+entity events {
+    id: uuid
+    --
+    idempotence_id: text
+    event_timestamp: datetime
+    type: enum
+    product_type: enum(platform_deposits | external_deposits)
+    customerId: uuid
+    correlationId: text
+    params: jsonb
+}
+note top
+    idempotence-id: {{ orderId }}
+    eventTimestamp: ...
+    type: "deposit-activation"
+    product_type: "DEPOSIT"
+    customerId: XXXX-XXXX
+    correlationId: {{ contractId }}
+    params: {
+        promoCode?: XXXX-XXXX
+        firstDeposit: true
+        orderId: XXXX-XXXX
+        contractId: XXXX-XXXX
+        amount: ...
+        depositDuration: ...
+        depositRate: ...
+    }
+end note
+
+}
+
+
+
+
+
+entity promotion_referrals {
+    * [PK] **guid**
+    --
+    **role**: enum(parent, child)
+    **created_at**: timestamps
+    **updated_at**: timestamp
+}
+
+
+
+
+entity orders{
+== Справочник распоряжений ==
+* id : uuid
+* registry_document_id : uuid
+  number : string
+  date : string
+== ==
+* create_timestamp : date_time
+* update_timestamp : date_time
+
+}
+
+
+namespace ExternalPartnersPromocodesDomain {
+
+entity external_partners_promocode_based {
+    * [PK] **guid**
+    --
+    * generation_type : enum (preloaded, on_demand)
+    generate_from: timestamp
+    generate_to: timestamp
+    code_generation_template : string (ex code_mask)
+    **created_at**: timestamp
+    **updated_at**: timestamp
+}
+entity external_partners_promocodes {
+    * [PK] **guid**
+    --
+    == **составной уникальный ключ** ==
+    * **promotion_id** : UUID [FK]
+    * **code** : string
+    ====
+    customer_id : uuid
+    expires_at: timestamp
+    **created_at**: timestamp
+}
+entity external_partners_promocodes_usage_log {
+    * [PK] **guid**
+    --
+    * event_id
+    * customer_id
+    * promocode_id : UUID
+    **created_at**: timestamp
+}
+
+
+}
+
+
+
+entity partners {
+* id **UUID**
+* promocode_id
+* name
+* createDateTime
+* updateDateTime
+}
+
+partners ||-o{ promocodes
+
+
+registry_document ||--o{ registry_document_record
+registry_document ||--o{ registry_document_history
+registry_document_record ||--o{ registry_document_record_history
+registry_document_record ||--|| bonuses
+registry_document ||--|| orders
+external_documents ||--o{ promotions
+external_documents }o--|| registry_document
+
+tmp_documents||--||orders
+tmp_documents||--||external_documents
+promotions_audit }o--||promotions
+
+
+promotions ||--o| promotion_referrals
+promotions ||--o{ promotion_limits
+promotion_limits ||--o{ promotion_use
+promotion_use ||--o{ registry_document
+promotions ||--o| promotion_promocode_based
+promotions ||--o| external_partners_promocode_based
+external_partners_promocode_based ||--o{ external_partners_promocodes
+external_partners_promocodes ||--o{ external_partners_promocodes_usage_log
+promotion_promocode_based ||--o{ promocodes
+promocodes ||--o{ promocodes_usage_log
+
+events ||--o| promocodes_usage_log
+promotions ||--o{ promotion_event_configs
+promotions ||--o{ bonuses
+bonuses ||--|{ bonuses_history
+bonuses ||--o{ bonuses_deferred_state_transitions
+events ||--o{ bonuses_history
+@enduml

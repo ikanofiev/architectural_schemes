@@ -1,0 +1,181 @@
+@startuml
+hide circle
+skinparam linetype ortho
+
+
+
+
+namespace registry_domain {
+
+entity registry_document{
+== Реестр на оплату услуг ==
+* id : uuid	ИД
+* version : integer Версия
+
+* create_timestamp : date_time
+* update_timestamp : date_time
+* registry_number : string Номер реестра
+* registry_date : date Дата реестра
+* registry_amount : number Сумма реестра без налога
+* partner_id : uuid ССылка на ИД партнера в справочнике
+* registry_total_amount : number Сумма реестра с учетом налога
+* registry_tax : number Сумма налога
+* currency : enum(string) Валюта реестра
+* status : enum Статус обработки реестра
+}
+
+entity registry_document_history{
+* id : uuid
+* registry_document_id : uuid
+* registry_document_status : enum
+* create_timestamp : date_time
+
+== Данные оператора ==
+* system_code : string
+* login :
+* role :
+* action : (enum)
+
+}
+
+
+entity registry_document_record{
+Записи реестра
+* id :	 uuid ИД
+* version : integer Версия
+* create_timestamp : date_time Дата-время создания записи
+* update_timestamp : date_time Дата-время обновления записи
+* registry_document_id : uuid ИД документа реестра по нумерации Хаба
+* amount : number Сумма выплаты
+* total_amount : number Сумма с учетом налога
+* tax : number Сумма налога
+* status : enum Статус обработки записи
+== Целевые поля связи с акциями ==
+ -- **ИД начисления по услуге**-- : **(!)** Связь развернули в один-к-многим
+
+
+}
+
+
+
+entity registry_document_record_history{
+* id : uuid
+* registry_document_record_id : uuid
+* registry_document_record_status : enum
+* create_timestamp : date_time
+== Данные оператора ==
+* system_code : string
+* login :
+* role :
+
+}
+
+}
+
+
+namespace events_domain {
+entity events {
+    id: uuid
+    --
+    idempotence_id: text
+    event_timestamp: datetime
+    type: enum
+    product_type: enum(platform_deposits | external_deposits)
+    customerId: uuid
+    correlationId: text
+    params: jsonb
+}
+
+entity events_history {
+* **id** : uuid
+* [PK] **event_id** : uuid
+--
+Надо придумать набор столбцов для логирования жизненного цикла события
+}
+
+
+}
+
+
+
+
+entity service_card_event_configs {
+    **id**: UUID
+    --
+    * promotion_id: UUID
+    * event_type: text
+    * state_transition: enum
+    * status : enum (NEW, ACTIVE, UNDER_REVISION, CANCELLED)
+    rules: binary
+    dmn_templates_id : UUID
+    description : text
+}
+
+
+entity service_card {
+== Карточка услуги ==
+* id
+
+
+}
+
+entity tariffs {
+* id :
+* params
+}
+
+
+entity accruals {
+  * **id**: UUID
+  --
+  * **state** (enum)
+  * **promotion_id**: UUID
+  * correlation_id: {{ contractId }}
+  * customer_id: uuid
+  * amount: decimal
+    registry_document_record_id : UUID ССылка на запись реестра
+  ...
+  * **created_timestump**: timestamp
+  * **updated_timestump**: timestamp
+}
+entity accruals_history {
+    * **id**
+    --
+    * bonus_id
+    * event_id
+    * created_timestump
+    * state
+}
+entity accruals_deferred_state_transitions {
+  * **id**: UUID
+  --
+  * **bonus_id**: UUID
+  * state_transition: enum
+  * delayed_until: timestamp
+  * status: enum(NEW|COMPLETED|CANCELLED)
+  ...
+  * **created_timestump**: timestamp
+  * **updated_timestump**: timestamp
+}
+
+
+
+
+
+
+
+
+
+entity partners {
+== внешний справоник ==
+
+* id **UUID**
+* name
+* createDateTime
+* updateDateTime
+}
+
+
+
+
+@enduml

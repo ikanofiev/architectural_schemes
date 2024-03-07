@@ -1,0 +1,61 @@
+@startuml
+class core_account_domain << (D,#FF7700)  >>{
+Домен корневых счетов
+==
+outgoing_payment_document : Исходящий платежный документ
+incoming_payment_document : Входящий платежный документ
+}
+
+entity clients_domain{
+Домен клиентских средств
+==
+client_account_transactions : Обороты по кошелькам клиентов
+
+}
+entity registry_domain{
+Домен реестровых зачислений
+==
+registry_document : Реестр.Документ
+registry_document_records : Таблица зачислений по реестру
+registry_refund : Реестр.возврат излишков
+
+}
+
+entity statement_domain{
+Домен сверки с НРД
+==
+statements_entries : Запись в сверке
+
+}
+
+entity invoices_domain{
+Домен счетов на оплату (целевое распоряжение средств.)
+==
+invoice_transactions : Обороты по счету
+
+}
+
+entity refund_undefined_funds {
+Возвраты не выясненных средств
+==
+* id : uuid
+* incoming_payment_document_psbr_id : uuid
+* outgoing_payment_document_psbr_id : uuid
+}
+
+statement_domain::statements_entries ||--|| core_account_domain::outgoing_payment_document
+statement_domain::statements_entries ||--|| core_account_domain::incoming_payment_document
+registry_domain::registry_document ||--|| core_account_domain::incoming_payment_document
+registry_domain::registry_refund ||--|| core_account_domain::outgoing_payment_document
+registry_domain::registry_document_records ||--|| clients_domain::client_account_transactions
+core_account_domain::incoming_payment_document ||--|| refund_undefined_funds::incoming_payment_document_psbr_id #red
+core_account_domain::outgoing_payment_document ||--|| refund_undefined_funds::outgoing_payment_document_psbr_id #green
+core_account_domain::incoming_payment_document ||--|| clients_domain::client_account_transactions #green
+
+core_account_domain::incoming_payment_document ||--|| invoices_domain::invoice_transactions #red
+core_account_domain::outgoing_payment_document ||--|| invoices_domain::invoice_transactions #green
+invoices_domain::invoice_transactions ||--|| clients_domain::client_account_transactions #red
+invoices_domain::invoice_transactions ||-l-|| clients_domain::client_account_transactions
+
+
+@enduml

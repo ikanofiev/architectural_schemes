@@ -1,0 +1,14 @@
+@startuml
+'(*) -> New
+New -> [pain.001] Sent
+New -> [Внутренний отказ\nплатформы]Rejected
+Sent -> [Pain.002.ACSP] Processing
+Sent -> [admi.002] Rejected
+Processing -> [camt.054] Completed
+Processing -> [Pain.002.RJCT] Rejected
+Processing -> [Pain.002.PDNG] Postponed
+Postponed -> [camt.054] Completed
+Postponed -->  [Pain.002.RJCT] Rejected
+'Completed -> (*)
+'Rejected -> (*)
+@enduml

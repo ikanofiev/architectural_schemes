@@ -1,0 +1,51 @@
+@startuml
+autonumber
+actor user as "User"
+participant ui as "mp-ui-lk"
+participant bff as "pl-lk-api"
+participant depui as "mp-deposit-ui"
+participant depbff as "mp-deposit-api"
+participant bonus as "pl-bonuses"
+== LAZY REFERAL CODE GENERATION ==
+user --> ui : Переход на профиль\n(страница с реф кодом)
+ui -> bff ++ : GET /profile/referal-code
+bff -> bonus ++ : GET /customer/[customerId]/referal-code
+alt Код есть
+    bff <- bonus : OK referal-code
+else Кода еще нет
+    bff <- bonus : 404
+    bff -> bonus : POST /customer/[customerId]/referal-code
+    bff <- bonus -- : OK referal-code
+end
+ui <- bff -- : OK referal-code
+user <-- ui : Видит свой реферальный код
+== REFERAL LINK CREATION ==
+user --> depui : Страница открытия вклада\n(поле ввода бонуса)
+user --> depui : У меня есть промо-код
+user --> depui : МОДАЛЬНОЕ ОКНО Ввод реферального или промо-кода
+depui -> depui : Проверка маски кода
+note right depui
+    Проверка типа кода
+    если есть префикс "RF-",
+    то код вставляется в поле "referal-code",
+    инача в поле "promo-code"
+end note
+user --> depui : Submit!
+note over depui
+    ¿Когда должна быть **привязка**?
+    В модалке или потом при сабмите формы
+end note
+opt Если введен реферальный код
+depui -> bff ++ : POST /profile/link-referal\n{ referal-code }
+alt Если код уже использован
+    depui <- bff -- : 400 Неверный код
+    user <-- depui : Ошибка кода!
+    user ->o? : GOTO **10**
+else Успешная привязка пользователя
+    depui <- bff : 200 OK
+    depui -> depbff ++ : POST /opening/submit-contract\n{ ..., promo-code }
+    ...
+    depui <- depbff -- : OK
+    user <-- depui: Переход на ЭФ "Ожидание ответа от банка"
+end
+@enduml

@@ -1,0 +1,90 @@
+@startuml
+namespace Wallets {
+
+entity wallet_incoming {
+Отнесение входящих средств на клиента
+==
+* id : uuid
+* customer_id : uuid
+* document_id : uuid
+* document_type : enum
+==
+* client_account_transactions_id : uuid
+* create_timestamp : date_time
+==
+  creator : string
+  comment : string
+}
+
+entity wallet_outgoing {
+Списание средств с клиента
+==
+* id : uuid
+* customer_id : uuid
+* invoice_id : uuid
+* status : enum
+* client_account_transactions_id : uuid
+* create_timestamp : date_time
+==
+  creator : string
+  comment : string
+}
+entity client_account_transactions {
+Обороты по кошельку клиента
+==
+* id : uuid
+==
+  incoming_payment_document_psbr_id : uuid
+==
+* customer_id : uuid
+  income_amount : number
+  expense_amount : number
+* currency :
+* value_date : date_time
+* create_timestamp : date_time
+
+}
+
+entity client_account_balance {
+Балансы кошелька клиента
+==
+* id : uuid
+==
+* customer_id : uuid
+* amount :
+* currency :
+* oper_day : dateTime
+* create_timestamp : date_time
+* update_timestamp : date_time
+
+}
+}
+
+entity core_account_domain{
+Домен корневых счетов
+==
+outgoing_payment_document : Исходящий платежный документ
+incoming_payment_document : Входящий платежный документ
+}
+
+entity registry_domain{
+Домен реестровых зачислений
+==
+registry_document_records_id : Таблица зачислений по реестру
+
+}
+entity invoices_domain{
+Домен счетов на оплату (целевое распоряжение средств.)
+==
+invoice : Счет на оплату
+invoice_income : Поступления на счет
+
+}
+
+core_account_domain::incoming_payment_document ||--|| wallet_incoming::document_id #blue
+invoices_domain::invoice_transaction ||--|| client_account_transactions::document_id #blue
+
+wallet_outgoing::client_account_transactions_id ||--|| client_account_transactions::id #blue
+wallet_incoming::client_account_transactions_id ||--|| client_account_transactions::id #blue
+registry_domain::registry_document_records_id ||--|| client_account_transactions::document_id #blue
+@enduml

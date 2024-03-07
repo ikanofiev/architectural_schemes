@@ -1,0 +1,44 @@
+@startuml
+''actor user_1c
+participant "1C" as 1c
+participant "PL-BONUSES" as bonus
+participant "mp-sys-doc-signer" as sig
+loop
+    1c -> bonus++ : GET /api/v1/registry список доступных реестров
+    bonus --> bonus : Select id from registry_document where status = 'Waitinf_for_sent_to_1c'
+    return List
+end
+alt list not null
+    loop until list null
+        1c -> bonus++ : GET api/v1/registry/{id}
+        bonus --> bonus : поиск реестра по ИД
+        alt Реестр найден
+            bonus -> bonus : сформировать json блок реестра для выгрузки
+            bonus -> sig++ : POST /api/v0/crypto/signing/detached
+            sig -> sig : процесс подписания
+            return : Сертификат и подпись.
+            bonus -> bonus : сформировать итоговый объект
+            bonus --> 1c : Реестр + подпись.
+        else Реестр не найден
+            return : 404
+        end
+        alt Реестр принят на обработку (тех.проверка)
+            1c -> bonus++ : PUT api/v1/registry/{id}/confirm
+            return
+        else
+            1c -> bonus++ : PUT api/v1/registry/{id}/reject
+            return
+        end
+    end
+end
+
+1c -> 1c++ : ОБработка реестра в "1C"
+alt Реестр успешно обработан. сформирован XML
+1c -> bonus++ : POST api/v1/registry/{id}
+return : OK\Error
+else
+1c -> bonus++ : PUT api/v1/registry/{id}/reject
+return : OK\Error
+end
+1c--
+@enduml

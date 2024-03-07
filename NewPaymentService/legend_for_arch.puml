@@ -1,0 +1,21 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_LEFT_RIGHT()
+
+skinparam wrapWidth 300
+skinparam linetype line
+
+
+System(1,"Не изменяемая система")
+System(2,"Дорабатывается корневой функционал") #green
+System(3,"Частично меняются настройки системы") #blue/green
+2-[#green,dotted,thickness=4]->1: "Изменяемая интеграция"
+
+
+
+
+@enduml
+1-[#blue,bold]->3:"Существующая интеграция"
+3-[#red,dotted,thickness=4]->2:"Новая интеграция"
+
+

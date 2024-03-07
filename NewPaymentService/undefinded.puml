@@ -1,0 +1,63 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+participant "Фронт Бэкофиса\nмодуль поиска и возврата\nневыясненных платежей." as bf
+participant "pl-backoffice-core" as back
+participant "pl-payment-hub" as pay
+participant "mp-sys-bpm" as bpm
+
+== построение списка невыясненных платежей ==
+
+bf -> back++ : Запрос списка невыясненных платежей.
+back ->  pay++ : Запрос списка невыясненных в хабе.
+return
+back ->  bpm++ : Запрос списка невыясненных в BPM
+return
+back -> back : Обогащение решениями, если есть.
+back --> bf-- : Возврат общего списка.
+bf -> bf : Построение общего списка.
+
+== решение по невыясненному платежу ==
+
+bf -> back : Решение по возврату
+back -> back : сохранение в БД.
+back -> bf : 200
+
+== подтверждение по решению. ==
+
+bf -> bf : Отрисовка формы подтверждения решения по обработке платежа.
+alt Подтвердить.
+    bf -> back : confirm
+    back -> back : откуда платеж?
+    alt hub
+        back -> pay : refund
+        back -> back : status:==send
+    else bpm
+    end
+
+
+else Подтвердить с изменениями
+    bf -> back : confirm + changes
+        back -> back : Изменить реквизиты
+        back -> back : откуда платеж?
+        alt hub
+            back -> pay : refund
+            back -> back : status:==send
+        else bpm
+        end
+else Отменить
+    bf -> back : cancel
+end alt
+
+loop Есть решения в статусе send
+ back -> pay: check status
+end
+
+
+== Форма статуса решений по обработке невыясненных ==
+
+bf -> back : Запрос списка решении по обработке невыясненных платежей.
+return
+
+@enduml

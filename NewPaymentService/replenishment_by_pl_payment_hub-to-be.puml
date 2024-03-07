@@ -1,0 +1,212 @@
+@startuml
+
+
+skinparam handwritten true
+
+actor "Сотрудник операционного департамента\nDevOps" as oper
+participant "НРД" as nrd
+participant error.topic
+participant skip
+participant "mp-sys-nsd" as nsd
+participant "mp-sys-dictionary-bank\nmp-sys-dictionary" as dict
+participant "pl-payment-hub" as hub
+participant "mp-sys-bpm" as bpm
+participant "mp-sys-payment" as payment
+participant "mp-sys-customer-contract" as mcc
+participant "CRAML" as craml
+
+== Процесс To-Be ==
+
+== В данной схеме будет описан процесс обработки входящих ПД из ПСБ\nТекущая обработка поступающих ПД начинается в mp-sys-nsd в качестве адаптера с системам НРД\nДалее платежный документ поступает в pl-payment-hub ==
+
+nrd -> nsd++ : camt.054.inbound
+nsd -> dict++ : Получение\nреквизитов Н\С
+return
+alt Платеж на номинальный счет?
+    nsd -> dict++ : Преобразование SWIFT\nбанка отправителя
+    return
+    alt БИК получен?
+        nsd -> hub++ : отправка преобразованного\ncamt.054.inbound
+    else
+        nsd --> error.topic++
+        error.topic--
+    end
+else Платеж не на номинальный счет.
+    nsd --> skip++
+    nsd--
+    skip--
+end
+
+hub -> hub++ : Учет в хабе
+hub -> hub : Создание записи в\nincoming-payment-document-psbr
+hub -> hub : Создание транзакции в\ncore-account-transactions
+hub -> hub : Изменение баланса в\ncore-acount-balance\nза соответствующий\nоперационный день.
+hub--
+hub -> hub++ : Учет по бизнес-логике
+alt реквизиты и маска ПД соответствует\nРеестровому платежу(registry_counterparty)?
+    hub -> hub : Платежу устанавливается\nстатус Waiting-for-registry,\nдалее обработка по реестровому домену.
+    hub -> bpm++: Отправить событие зеркалирования.
+        bpm -> bpm : инициируется процесс\nregistry-payment.bpmn
+        bpm -> payment++: Создание MoneyTransfer
+        payment--
+        bpm -> payment++: Создание\nMoneyTransferOperation=registry_income
+        payment--
+        bpm--
+else реквизиты соответствуют\nожиданию поступающего ПД\n(expected_wallet_incoming,\nсравнение по реквизитам\nили ключу в назначение ПД)?
+    hub -> hub : В соответствующей записи\nexpected_wallet_incoming\nдобавить ИД ПД\nиз incoming-payment-document-psbr
+    hub -> hub : Создать запись в таблице\nwallet_incoming,\nИД созданной записи добавить\nв expected_wallet_incoming\nв поле wallet_incoming_id
+    hub -> hub : Создать запись\nв client_account_transaction\nи соответствующие связи
+    hub -> hub : Создать\обновить запись\nв client_account_balance\nв соответствующем операционном дне.
+    hub -> hub : Установить ПД статус PROCESSED
+    hub -> bpm++: Отправить событие зеркалирования.
+    bpm -> bpm : инициируется процесс\nwallet-payment-document-mirroring.bpmn
+    bpm -> payment++: Создание MoneyTransfer
+    payment--
+    bpm -> payment++: Создание\nMoneyTransferOperation=WALLET_REPLENISHMENT
+    payment--
+    bpm--
+else Поступление не под ожидающие процессы
+    hub -> hub++ : Блок аналитики ПД
+    hub -> hub : Парсинг ПД на наличие в назначении платежа, отправителе и ИНН полезных данных.
+    note right
+        На данном этапе в соответствиями с требованиями к m2m проверкам
+        мы из ПД пытаемся найти:
+        1. ИД договора
+        2. ФИО клиента
+        3. ИНН физ.лица
+    end note
+    hub -> hub : Выполнение m2m проверок и анализ направления зачисления средств.
+    alt Реквизиты счета отправителя\nне соответствуют маске допустимых\nсчетов источников\n(лицевые счета, счета вкладов,\nсчета ИП, некоторые маски кор. и тех. счетов).
+        alt Возможен автовозврат.
+            hub->hub : tobe
+        else На ручник.
+            hub->hub : Установить ПД статус UNDECIDED
+            hub -> bpm++: Отправить событие зеркалирования.
+            bpm -> payment++: Создание MoneyTransfer
+            payment--
+            bpm -> payment++: Создание\nMoneyTransferOperation=UNIDENTIFIED_INCOMING_TRANSFER
+            payment--
+            bpm--
+        end
+    else В ПД найден  идентификатор договора\иной ключ указывающий на invoice
+        hub -> hub : Найти инвойс соответствующий ИД договора\ключу
+        alt Найден invoice
+            hub -> craml++ : ПО ИД клиента из Инвойса получить данные клиента
+            return
+            alt Клиент найден
+                hub -> hub : сравнить данные клиента из CRAML с данными из ПД
+                note right
+                    Список проверок и варианты совпадений
+                    описаны в WiKi...
+                end note
+                alt клиент совпал, зачисление возможно.
+                    alt invoice в статусе - WAIT_FOR_MONEY
+                        hub -> hub : Создать запись в таблице\invoice_income,\nгде ИД инвойса = ИД договора вклада.
+                        hub -> hub : Установить ПД статус PROCESSED
+                        hub -> bpm++ : Отправить событие зеркалирования
+                        bpm -> payment++ : Выполнить операцию (NSD_COMPLETION)\nВозможно перед этим создать\nденежный перевод, тонкости\nбудут детализированны отдельно.
+                        bpm--
+                        payment--
+                    else Статус инвойса не позволяет произвести отнесение средств на него.
+                            hub -> hub : Создать запись в таблице\nwallet_incoming
+                            hub -> hub : Создать запись\nв client_account_transaction\nи соответствующие связи
+                            hub -> hub : Создать\обновить запись\nв client_account_balance\nв соответствующем операционном дне.
+                            hub -> hub : Установить ПД статус PROCESSED
+                            hub -> bpm++: Отправить событие зеркалирования.
+                            bpm -> bpm : инициируется процесс\nwallet-payment-document-mirroring.bpmn
+                            bpm -> payment++: Создание MoneyTransfer
+                            payment--
+                            bpm -> payment++: Создание\nMoneyTransferOperation=WALLET_REPLENISHMENT
+                            payment--
+                            bpm--
+                    end
+                else клиент не совпал, зачисление не возможно.
+                    alt Возможен автовозврат.
+                        hub->hub : tobe
+                    else На ручник.
+                    hub->hub : Установить ПД статус UNDECIDED
+                    hub -> bpm++: Отправить событие зеркалирования.
+                        bpm -> payment++: Создание MoneyTransfer
+                        payment--
+                        bpm -> payment++: Создание\nMoneyTransferOperation=UNIDENTIFIED_INCOMING_TRANSFER
+                        payment--
+                        bpm--
+                    end
+                end
+
+    else Инвойс не найден
+        alt в ПД есть ИНН физ.лица
+            hub -> craml++ : Поиск ИД клиента по ИНН
+            return
+            alt клиент найден
+                alt Клиент из "CRAML" совпадает с клиентом из ПД
+                     hub -> hub : Создать запись в таблице\nwallet_incoming
+                                                 hub -> hub : Создать запись\nв client_account_transaction\nи соответствующие связи
+                                                 hub -> hub : Создать\обновить запись\nв client_account_balance\nв соответствующем операционном дне.
+                                                 hub -> hub : Установить ПД статус PROCESSED
+                                                 hub -> bpm++: Отправить событие зеркалирования.
+                                                 bpm -> bpm : инициируется процесс\nwallet-payment-document-mirroring.bpmn
+                                                 bpm -> payment++: Создание MoneyTransfer
+                                                 payment--
+                                                 bpm -> payment++: Создание\nMoneyTransferOperation=WALLET_REPLENISHMENT
+                                                 payment--
+                                                 bpm--
+                end
+            end
+
+    end
+     alt Возможен автовозврат.
+                                       hub->hub : tobe
+                                   else На ручник.
+                                        hub->hub : Установить ПД статус UNDECIDED
+                                   hub -> bpm++: Отправить событие зеркалирования.
+                                       bpm -> payment++: Создание MoneyTransfer
+                                       payment--
+                                       bpm -> payment++: Создание\nMoneyTransferOperation=UNIDENTIFIED_INCOMING_TRANSFER
+                                       payment--
+                                       bpm--
+                                   end
+
+
+    hub--
+    hub--
+    hub--
+
+== Блок обработки невыясненных платежей.\n Далее будет описан блок распределения невыясненных платеже.\nАвтоматический возврат отсутствует(временно)\nтолько ручной разбор.\n\nВозможные решения:\nЗачислить на кошелек;\nЗачислить на договор вкалад(резерв);\nВернуть отправителю, в т.ч. по свободно указываемым реквизитам. ==
+
+    oper -> hub++ : Решение по возврату.
+    alt Возврат реестрового платежа ПСБР
+
+        ref over hub
+            Вполне работающий процесс, описан в https://wiki.moex.com/x/05esCQ.
+            По ходу реализации будет необходимо врезаться в него.
+            Из предполагаемых изменений - научиться различать реестровый возврат и
+            возврат обычного платежа ПСБР. Соответственно при зеркалировании в bpm
+            учитывать различия и разносить деньги по регистрам корректно.
+        end ref
+
+    else Возврат платежа ПСБР
+        ref over hub
+            Возврат ФАКТИЧЕСКИ аналогичен всем предыдущим:
+            1. Созадется ПД в таблице outgoing_payment_document_psbr в статусе NEW
+            2. Создается запись в таблице Full_refund_order и связываются входящий и исходящий 
+            3. Шедулер подхватывает все новые исходящие и отправляет в НРД (через mp-sys-nsd конечно)
+            4. Система ожидает поступления тех.сообщений от НРД и конечного статуса(успех\ошибка).
+            4.1. Если вернется ошибочное состояние от НРД - запись в full_rufund_order уйдет о отказ, так же как и исходящий ПД.
+            4.2. Если вернется успешный ответ - Возврат устанавливается успешный статус.
+            5. В любом случае выполняется зеркалирование результата в bpm\payment
+        end ref
+
+    else Возврат платежа СБП
+        ref over hub
+            Так же уже вполне живой блок
+            https://wiki.moex.com/x/rzVpCw
+            Описание есть. Зеркало учета есть.
+        end ref
+    end
+
+end
+end
+end
+end
+@enduml

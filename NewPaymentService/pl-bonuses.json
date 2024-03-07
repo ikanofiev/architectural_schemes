@@ -1,0 +1,4965 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://pl-bonuses.mp-rc.mpddev.moex.com",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+    "/api/v1/registry": {
+      "get": {
+        "description": "Возвращает список доступных к выгрузке реестров",
+        "responses": {
+          "200": {
+            "description": "Список реестров",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RegistryListResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "RegistryApi"
+        ]
+      }
+    },
+    "/api/v1/registry/{id}": {
+      "get": {
+        "description": "Возвращает реестр по ИД",
+        "responses": {
+          "200": {
+            "description": "Список реестров",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Реестр не найден"
+          }
+        },
+        "tags": [
+          "RegistryApi"
+        ]
+      }
+    },
+    "/api/v1/registry/{registryId}/auto-payment": {
+      "put": {
+        "tags": [
+          "RegistryApi"
+        ],
+        "description": "Принимает на вход файл реестра и тип выплаты",
+        "operationId": "registryAutoPayment",
+        "parameters": [
+          {
+            "name": "X-Cufu-Login",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Cufu-Roles",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "registryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса"
+          },
+          "400": {
+            "description": "Реестр не находится в статусе RECEIVED_1C"
+          },
+          "200": {
+            "description": "Успешное выполнение"
+          },
+          "404": {
+            "description": "Реестр не найден"
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/platform-deposit/code/validate": {
+      "put": {
+        "tags": [
+          "PromotionsApi"
+        ],
+        "description": "Валидация промокода",
+        "operationId": "validatePlatformDepositCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformDepositCodeValidationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "422": {
+            "description": "Промокод не валиден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformDepositCodeValidationResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformDepositCodeValidationResponseDto"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Промокод валиден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformDepositCodeValidationResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/platform-deposit/code/apply": {
+      "put": {
+        "tags": [
+          "PromotionsApi"
+        ],
+        "description": "Применение промокода",
+        "operationId": "applyPlatformDepositCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformDepositCodeApplyRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "422": {
+            "description": "Промокод не валиден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformDepositCodeApplyResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformDepositCodeApplyResponseDto"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Промокод валиден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformDepositCodeApplyResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/promotions": {
+      "get": {
+        "tags": [
+          "PromotionAdminApi"
+        ],
+        "description": "Список существующих акций",
+        "operationId": "getPromotions",
+        "parameters": [
+          {
+            "name": "productType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PLATFORM_DEPOSIT",
+                "EXTERNAL_DEPOSIT",
+                "PLATFORM_INSURANCE",
+                "CREDIT"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "NOT_ACTIVE"
+              ]
+            }
+          },
+          {
+            "name": "isValidCurrentDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "codeType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SINGLE",
+                "MULTIPLE_GENERATED",
+                "MULTIPLE_PRELOADED",
+                "EXTERNAL_GENERATED",
+                "PARTNER_CLICK"
+              ]
+            }
+          },
+          {
+            "name": "counterpartyId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultPromotionDto"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Список акций",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultPromotionDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PromotionAdminApi"
+        ],
+        "description": "Обновление акции",
+        "operationId": "updatePromotion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionUpdateDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Обновленная акция",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка в данных",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации акции",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PromotionAdminApi"
+        ],
+        "description": "Создание акции",
+        "operationId": "createPromotion_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionCreationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка в данных запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Созданная акция",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/registries/xml": {
+      "post": {
+        "tags": [
+          "BonusesApiV2"
+        ],
+        "description": "Прием XML с данными реестра c валидацией  по идентификатору клиента",
+        "operationId": "registry",
+        "parameters": [
+          {
+            "name": "fileName",
+            "in": "query",
+            "description": "Имя файла, из которого передаются данные",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryProcessingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryProcessingResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Успешное выполнение",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryProcessingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/admin/promotions": {
+      "post": {
+        "tags": [
+          "PromotionAdminApiV2"
+        ],
+        "description": "Создание акции",
+        "operationId": "createPromotion",
+        "parameters": [
+          {
+            "name": "X-Cufu-Login",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Cufu-Roles",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionCreationRequestDtoV2"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка в данных запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Созданная акция",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/registry/load": {
+      "post": {
+        "tags": [
+          "RegistryApi"
+        ],
+        "description": "Принимает на вход файл реестра и тип выплаты",
+        "operationId": "registryLoad",
+        "parameters": [
+          {
+            "name": "X-Cufu-Login",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Cufu-Roles",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Реестр с таким номером уже существует",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryLoadResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryLoadResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Успешное выполнение",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryLoadResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/registries/{registryId}/payment": {
+      "post": {
+        "tags": [
+          "BonusesApi"
+        ],
+        "description": "Внесение информации о платежном документе",
+        "operationId": "paymentDocument",
+        "parameters": [
+          {
+            "name": "registryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentDocumentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "Не найден клиент, инвойс или номинальный счёт"
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервиса"
+          },
+          "400": {
+            "description": "Ошибка валидации запроса"
+          },
+          "200": {
+            "description": "Успешное выполнение"
+          }
+        }
+      }
+    },
+    "/api/v1/registries/xml": {
+      "post": {
+        "tags": [
+          "BonusesApi"
+        ],
+        "description": "Прием XML с данными реестра",
+        "operationId": "registry_1",
+        "parameters": [
+          {
+            "name": "fileName",
+            "in": "query",
+            "description": "Имя файла, из которого передаются данные",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryProcessingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryProcessingResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Успешное выполнение",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryProcessingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/{id}/code/generate": {
+      "post": {
+        "tags": [
+          "PromotionsApi"
+        ],
+        "description": "Генерирование промокода и отправка кода по смс",
+        "operationId": "generateAndSendCode",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CodeGenerationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса"
+          },
+          "200": {
+            "description": "Промокод отправлен"
+          },
+          "404": {
+            "description": "Промокод не найден"
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/platform-insurance/code/validate": {
+      "post": {
+        "tags": [
+          "PromotionsApi"
+        ],
+        "description": "Валидация промокода",
+        "operationId": "validatePlatformInsuranceCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformInsuranceCodeValidationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformInsuranceCodeValidationResponseDto"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Промокод валиден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformInsuranceCodeValidationResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/platform-insurance/code/assign": {
+      "post": {
+        "tags": [
+          "PromotionsApi"
+        ],
+        "description": "Привязка промокода к заявке на страхование",
+        "operationId": "assignPlatformInsuranceCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformInsuranceAssignCodeRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "422": {
+            "description": "Промокод не валиден"
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервиса"
+          },
+          "200": {
+            "description": "Промокод привязан"
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/platform-deposit/code/assign": {
+      "post": {
+        "tags": [
+          "PromotionsApi"
+        ],
+        "description": "Привязка промокода к юзеру",
+        "operationId": "assignCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignCodeRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "422": {
+            "description": "Промокод не валиден"
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервиса"
+          },
+          "200": {
+            "description": "Промокод привязан"
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/credit/code/assign": {
+      "post": {
+        "tags": [
+          "PromotionsApi"
+        ],
+        "description": "Применение промокода к кредитному процессу",
+        "operationId": "assignCreditCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignCodeRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "422": {
+            "description": "Промокод не валиден"
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервиса"
+          },
+          "200": {
+            "description": "Промокод валиден"
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/bonus/available": {
+      "post": {
+        "tags": [
+          "PromotionsApi"
+        ],
+        "description": "Расчет доступных бонусов",
+        "operationId": "getAvailablePromotionsBonuses",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvailablePromotionBonusRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AvailablePromotionBonusInfoDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Тело запроса не валидно",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AvailablePromotionBonusInfoDto"
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Расчет успешен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AvailablePromotionBonusInfoDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/registry/paid": {
+      "post": {
+        "tags": [
+          "BonusEventsApi"
+        ],
+        "description": "Прием события произведенной выплаты по реестру",
+        "operationId": "registryPaid",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RegistryPaidEventDto"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса"
+          },
+          "200": {
+            "description": "Успешное выполнение"
+          }
+        }
+      }
+    },
+    "/api/v1/events/registry/generate": {
+      "post": {
+        "tags": [
+          "BonusEventsApi"
+        ],
+        "description": "Прием события формирования реестра на выплату",
+        "operationId": "registryGenerate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RegistryGenerateEventDto"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса"
+          },
+          "200": {
+            "description": "Успешное выполнение"
+          }
+        }
+      }
+    },
+    "/api/v1/customers/{customerId}/referral-link": {
+      "get": {
+        "tags": [
+          "CustomersApi"
+        ],
+        "description": "получение реферальной информации о пользователе",
+        "operationId": "getReferralLink",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "пользователь не найден",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralLinkInfo"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "реферальная информация о пользователе",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralLinkInfo"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CustomersApi"
+        ],
+        "description": "связь пользователей по реферальному коду",
+        "operationId": "linkCustomers",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferralLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "406": {
+            "description": "пользователь уже вводил реферальный код",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralLinkInfo"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "пользователи связаны",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralLinkInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "реферальный код не найден",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralLinkInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customers/{customerId}/referral-code": {
+      "get": {
+        "tags": [
+          "CustomersApi"
+        ],
+        "description": "получение реферального кода пользователя",
+        "operationId": "getReferralCode",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "реферальный код",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralCodeInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "реферальный код не найден",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralCodeInfo"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CustomersApi"
+        ],
+        "description": "генерация реферального кода пользователя",
+        "operationId": "generateReferralCode",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "пользователь не найден",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralCodeInfo"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "реферальный код создан",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralCodeInfo"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "реферальный код пользователя уже существует",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralCodeInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/codeRegistry/send": {
+      "post": {
+        "tags": [
+          "CodeRegistryApi"
+        ],
+        "description": "Создать реестр для промокодов за предыдущий месяц по текущую дату",
+        "operationId": "sendCodeRegistry",
+        "parameters": [
+          {
+            "name": "productType",
+            "in": "query",
+            "description": "Тип продукта, для промокодов которого необходимо сформировать и отправить реестры",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PLATFORM_DEPOSIT",
+                "EXTERNAL_DEPOSIT",
+                "PLATFORM_INSURANCE",
+                "CREDIT"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Реестр создан и отправлен на почту. "
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервиса"
+          }
+        }
+      }
+    },
+    "/api/v1/codeRegistry/resend": {
+      "post": {
+        "tags": [
+          "CodeRegistryApi"
+        ],
+        "description": "Создать реестр для списка промокодов при условии что статус PAY_IN_PROGRESS",
+        "operationId": "resendRegistryForCodes",
+        "parameters": [
+          {
+            "name": "productType",
+            "in": "query",
+            "description": "Тип продукта, для промокодов которого необходимо сформировать и отправить реестры",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PLATFORM_DEPOSIT",
+                "EXTERNAL_DEPOSIT",
+                "PLATFORM_INSURANCE",
+                "CREDIT"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Реестр создан и отправлен на почту. Возвращает список кодов по которым создан реестр",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bonus/registry/send": {
+      "post": {
+        "tags": [
+          "BonusRegistryApi"
+        ],
+        "description": "Создать реестр для бонусов за предыдущий месяц по текущую дату",
+        "operationId": "sendBonusRegistry",
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса"
+          },
+          "200": {
+            "description": "Реестр создан и отправлен на почту."
+          }
+        }
+      }
+    },
+    "/api/v1/bonus/registry/resend": {
+      "post": {
+        "tags": [
+          "BonusRegistryApi"
+        ],
+        "description": "Создать реестр для списка бонусов при условии что статус PROCESSING",
+        "operationId": "resendBonusRegistry",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Реестр создан и отправлен на почту.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/promotions/attributes/platform-deposit": {
+      "post": {
+        "tags": [
+          "PromotionAdminApi"
+        ],
+        "description": "Создание атрибутов для акции на платформенные вклады",
+        "operationId": "createPlatformDepositAttributes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformDepositAttributesCreationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformDepositAttributesDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformDepositAttributesDto"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Созданные атрибуты",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformDepositAttributesDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка в данных запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformDepositAttributesDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/promotions/attributes/external-deposit": {
+      "post": {
+        "tags": [
+          "PromotionAdminApi"
+        ],
+        "description": "Создание атрибутов для акции на неплатформенные вклады",
+        "operationId": "createExternalDepositAttributes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalDepositAttributesCreationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalDepositAttributesDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalDepositAttributesDto"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Созданные атрибуты",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalDepositAttributesDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка в данных запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalDepositAttributesDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/promotions/attributes/credit": {
+      "post": {
+        "tags": [
+          "PromotionAdminApi"
+        ],
+        "description": "Создание атрибутов для акции на кредитные продукты",
+        "operationId": "createCreditAttributes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditAttributesCreationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditAttributesDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditAttributesDto"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Созданные атрибуты",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditAttributesDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка в данных запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditAttributesDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/codes/multiple": {
+      "post": {
+        "tags": [
+          "CodeAdminApi"
+        ],
+        "description": "Создание промокодов по промоакции для множества клиентов",
+        "operationId": "createCodes",
+        "parameters": [
+          {
+            "name": "promotionId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Не найдена промоакция",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Формат файла не csv",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Промоакция не MULTIPLE_GENERATED, пустая маска кода, внутренняя ошибка сервиса",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Промокоды успешно созданы",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/registries/{registryId}": {
+      "get": {
+        "tags": [
+          "BonusesApi"
+        ],
+        "description": "Результаты обработки реестра",
+        "operationId": "registryResult",
+        "parameters": [
+          {
+            "name": "registryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Реестр находится в несоответствующем статусе",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Успешное выполнение",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/{orderId}/last": {
+      "get": {
+        "tags": [
+          "PromotionsApi"
+        ],
+        "description": "Получение последней актуальной промоакции по идентификатору продуктового процесса",
+        "operationId": "getLastActivePromotionByOrderId",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Последняя актульная промоакция",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Промоакция не найдена",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/referrals/{id}": {
+      "get": {
+        "tags": [
+          "PromotionsApi"
+        ],
+        "description": "Получение реферальных промоакций",
+        "operationId": "getReferralPromotionsWithConfigs",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PromotionReferralWithConfigsDto"
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Промоакции",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PromotionReferralWithConfigsDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/promotions/platform-deposit/code": {
+      "get": {
+        "tags": [
+          "PromotionsApi"
+        ],
+        "operationId": "findPlatformDepositCodesByOrders",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformDepositOrderCodeResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/promotions": {
+      "get": {
+        "tags": [
+          "PromotionsApi"
+        ],
+        "description": "Получение промоакций по идентификатору продуктового процесса",
+        "operationId": "getActivePromotionsByOrderId",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PromotionDto"
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Промоакции",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PromotionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customers/{customerId}/referrals": {
+      "get": {
+        "tags": [
+          "CustomersApi"
+        ],
+        "description": "Получение информации о рефералах пользователя",
+        "operationId": "getReferrals",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "информация о рефералах пользователя",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralsInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "пользователь не найден",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralsInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customers/{customerId}/bonuses": {
+      "get": {
+        "tags": [
+          "CustomersApi"
+        ],
+        "description": "Получение реферальной информации о пользователе",
+        "operationId": "getBonusesWithDeferredStateTransitions",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BonusWithDeferredStateTransitionDto"
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "реферальная информация о пользователе",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BonusWithDeferredStateTransitionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customers/{customerId}/bonuses/summary": {
+      "get": {
+        "tags": [
+          "CustomersApi"
+        ],
+        "description": "Получение полных данных по реферальным бонусам",
+        "operationId": "getBonusSummary",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BonusSummaryDto"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Полные данные по реферальным бонусам",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BonusSummaryDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bonuses/{bonusId}/history": {
+      "get": {
+        "tags": [
+          "BonusesHistoryApi"
+        ],
+        "description": "Получение истории событий",
+        "operationId": "getBonusesHistory",
+        "parameters": [
+          {
+            "name": "bonusId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BonusWithHistoryDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найден бонус",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BonusWithHistoryDto"
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Успешное выполнение",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BonusWithHistoryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/promotions/{id}": {
+      "get": {
+        "tags": [
+          "PromotionAdminApi"
+        ],
+        "description": "Получить акцию по идентификатору",
+        "operationId": "getPromotionById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Акция",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Акция с таким идентификатором не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/codes": {
+      "get": {
+        "tags": [
+          "CodeAdminApi"
+        ],
+        "description": "Получение промокодов по статусу промокода",
+        "operationId": "getCodes",
+        "parameters": [
+          {
+            "name": "promotionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "customerId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "leadId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CREATED",
+                "ASSIGNED",
+                "APPLIED",
+                "READY_FOR_PAY",
+                "PAY_IN_PROGRESS",
+                "PAID",
+                "CANCELLED",
+                "CANCELLED_DUE_TERMS_VIOLATION"
+              ]
+            }
+          },
+          {
+            "name": "orderId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "Внутренняя ошибка сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultCodeDto"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Промокоды в указанном статусе",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultCodeDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PlatformDepositCodeValidationRequestDto": {
+        "required": [
+          "code",
+          "customerId",
+          "orderId"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Промокод"
+          },
+          "orderId": {
+            "type": "string",
+            "description": "Id заявки на открытие вклада",
+            "format": "uuid"
+          },
+          "customerId": {
+            "type": "string",
+            "description": "Id клиента",
+            "format": "uuid"
+          }
+        },
+        "description": "Запрос на валидацию промокода для акции на платформенный вклад"
+      },
+      "PlatformDepositCodeValidationResponseDto": {
+        "type": "object",
+        "properties": {
+          "promptMd": {
+            "type": "string",
+            "description": "Подсказка для клиента"
+          },
+          "rulesUrl": {
+            "type": "string",
+            "description": "Ссылка на правила участия в акции"
+          }
+        },
+        "description": "Результат валидации промокода для акции на платформенный вклад"
+      },
+      "RegistryListResponseDto": {
+        "type": "object",
+        "properties": {
+          "id":{
+            "type": "string",
+            "description": "ИД реестра"
+          }
+        },
+        "description": "Массив доступных ИД реестров для выгрузки"
+      },
+      "PlatformDepositCodeApplyRequestDto": {
+        "required": [
+          "code",
+          "customerId",
+          "orderId"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Промокод"
+          },
+          "orderId": {
+            "type": "string",
+            "description": "Id заявки на открытие вклада",
+            "format": "uuid"
+          },
+          "customerId": {
+            "type": "string",
+            "description": "Id клиента",
+            "format": "uuid"
+          }
+        },
+        "description": "Запрос на применение промокода для акции на платформенный вклад"
+      },
+      "PlatformDepositCodeApplyResponseDto": {
+        "type": "object",
+        "properties": {
+          "promptMd": {
+            "type": "string",
+            "description": "Подсказка для клиента"
+          },
+          "rulesUrl": {
+            "type": "string",
+            "description": "Ссылка на правила участия в акции"
+          },
+          "rate": {
+            "type": "number",
+            "description": "Размер бонуса в процентах"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Размер бонуса"
+          }
+        },
+        "description": "Результат применения промокода для акции на платформенный вклад"
+      },
+      "AttributesUpdateDto": {
+        "required": [
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          }
+        },
+        "description": "Значение атрибутов для обновления акции",
+        "discriminator": {
+          "propertyName": "type"
+        }
+      },
+      "CreditAttributesUpdateDto": {
+        "required": [
+          "bonusCalcMethod",
+          "customersType"
+        ],
+        "type": "object",
+        "description": "Атрибуты для обновления акции на кредитные продукты",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AttributesUpdateDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "customersType": {
+                "type": "string",
+                "description": "Тип клиента",
+                "enum": [
+                  "ALL",
+                  "NEW"
+                ]
+              },
+              "bonusCalcMethod": {
+                "type": "string",
+                "description": "Способ расчёта бонуса",
+                "enum": [
+                  "FIXED",
+                  "PERCENT",
+                  "DYNAMIC_PERCENT",
+                  "STEPPED"
+                ]
+              },
+              "bonusAmount": {
+                "type": "number",
+                "description": "Размер бонуса"
+              }
+            }
+          }
+        ]
+      },
+      "PlatformDepositAttributesUpdateDto": {
+        "type": "object",
+        "description": "Атрибуты для обновления акции на платформенные вклады",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AttributesUpdateDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "bankId": {
+                "type": "integer",
+                "description": "Идентификатор банка",
+                "format": "int64"
+              },
+              "depositId": {
+                "type": "integer",
+                "description": "Идентификатор вклада",
+                "format": "int64"
+              },
+              "promptMd": {
+                "type": "string",
+                "description": "Подсказка для клиента в формате markdown"
+              },
+              "customersType": {
+                "type": "string",
+                "description": "Тип клиента",
+                "enum": [
+                  "ALL",
+                  "NEW"
+                ]
+              },
+              "amountMax": {
+                "type": "integer",
+                "description": "Максимальная сумма вклада",
+                "format": "int32"
+              },
+              "amountMin": {
+                "type": "integer",
+                "description": "Минимальная сумма вклада",
+                "format": "int32"
+              },
+              "termMax": {
+                "type": "integer",
+                "description": "Максимальный срок вклада",
+                "format": "int32"
+              },
+              "termMin": {
+                "type": "integer",
+                "description": "Минимальный срок вклада",
+                "format": "int32"
+              },
+              "rateMax": {
+                "type": "number",
+                "description": "Максимальная ставка",
+                "format": "float"
+              },
+              "rateMin": {
+                "type": "number",
+                "description": "Минимальная ставка",
+                "format": "float"
+              },
+              "activeDaysMinTerm": {
+                "type": "integer",
+                "description": "Количество дней сколько вклад должен быть открытым для выплаты бонуса",
+                "format": "int32"
+              },
+              "bonusCalcMethod": {
+                "type": "string",
+                "description": "Способ расчёта бонуса",
+                "enum": [
+                  "FIXED",
+                  "PERCENT",
+                  "DYNAMIC_PERCENT",
+                  "STEPPED"
+                ]
+              },
+              "bonusCalcFirstParam": {
+                "type": "integer",
+                "description": "Первый параметр для расчета бонуса",
+                "format": "int32"
+              },
+              "bonusCalcSecondParam": {
+                "type": "integer",
+                "description": "Второй параметр для расчета бонуса",
+                "format": "int32"
+              },
+              "bonusMaxAmount": {
+                "type": "number",
+                "description": "Максимальная сумма бонуса"
+              },
+              "conditionForPay": {
+                "type": "string",
+                "description": "Условия для выплаты бонуса",
+                "enum": [
+                  "PLAN_CLOSING",
+                  "ACTIVE_DAY"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "PromotionUpdateDto": {
+        "required": [
+          "codeType",
+          "endDate",
+          "id",
+          "productType",
+          "startDate",
+          "status",
+          "title",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Идентификатор",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "description": "Тип акции",
+            "enum": [
+              "PROMO_CODE",
+              "REFERRAL"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Название акции"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Дата начала",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Дата окончания",
+            "format": "date-time"
+          },
+          "generationStartDate": {
+            "type": "string",
+            "description": "Дата старта генерации кода",
+            "format": "date-time"
+          },
+          "generationEndDate": {
+            "type": "string",
+            "description": "Дата окончания генерации кода",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "description": "Статус",
+            "enum": [
+              "ACTIVE",
+              "NOT_ACTIVE"
+            ]
+          },
+          "productType": {
+            "type": "string",
+            "description": "Тип продукта",
+            "enum": [
+              "PLATFORM_DEPOSIT",
+              "EXTERNAL_DEPOSIT",
+              "PLATFORM_INSURANCE",
+              "CREDIT"
+            ]
+          },
+          "codeType": {
+            "type": "string",
+            "description": "Тип промокода",
+            "enum": [
+              "SINGLE",
+              "MULTIPLE_GENERATED",
+              "MULTIPLE_PRELOADED",
+              "EXTERNAL_GENERATED",
+              "PARTNER_CLICK"
+            ]
+          },
+          "codeMask": {
+            "type": "string",
+            "description": "Маска генерации для промокода"
+          },
+          "code": {
+            "type": "string",
+            "description": "Промокод"
+          },
+          "externalCode": {
+            "type": "string",
+            "description": "Ключевое слово для связи с DMN"
+          },
+          "codeAppliedCount": {
+            "type": "integer",
+            "description": "Количество уже примененных промокодов",
+            "format": "int32"
+          },
+          "codeExpirationInDays": {
+            "type": "integer",
+            "description": "Время жизни промокода",
+            "format": "int32"
+          },
+          "codeLimit": {
+            "type": "integer",
+            "description": "Лимит на число применений промокода",
+            "format": "int32"
+          },
+          "rulesUrl": {
+            "type": "string",
+            "description": "Ссылка на правила акции"
+          },
+          "promotionName": {
+            "type": "string",
+            "description": "Уникальное название промоакции"
+          },
+          "reestrCodeName": {
+            "type": "string",
+            "description": "Приказ"
+          },
+          "attributes": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CreditAttributesUpdateDto"
+              },
+              {
+                "$ref": "#/components/schemas/PlatformDepositAttributesUpdateDto"
+              }
+            ]
+          },
+          "smsTemplate": {
+            "type": "string",
+            "description": "Код шаблона СМС"
+          }
+        },
+        "description": "Данные для обновления акции"
+      },
+      "AttributesDto": {
+        "required": [
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          }
+        },
+        "description": "Атрибуты акции, зависят от типа продукта",
+        "discriminator": {
+          "propertyName": "type"
+        }
+      },
+      "CreditAttributesDto": {
+        "type": "object",
+        "description": "Атрибуты для акции на кредитные продукты",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AttributesDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "promotionId": {
+                "type": "string",
+                "description": "Идентификатор акции",
+                "format": "uuid"
+              },
+              "customersType": {
+                "type": "string",
+                "description": "Тип клиента",
+                "enum": [
+                  "ALL",
+                  "NEW"
+                ]
+              },
+              "bonusCalcMethod": {
+                "type": "string",
+                "description": "Способ расчёта бонуса",
+                "enum": [
+                  "FIXED",
+                  "PERCENT",
+                  "DYNAMIC_PERCENT",
+                  "STEPPED"
+                ]
+              },
+              "bonusAmount": {
+                "type": "number",
+                "description": "Максимальная сумма бонуса"
+              },
+              "createdAt": {
+                "type": "string",
+                "description": "Дата создания",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "description": "Дата последнего обновления",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "ExternalDepositAttributesDto": {
+        "type": "object",
+        "description": "Атрибуты для акции на не платформенные вклады",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AttributesDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "promotionId": {
+                "type": "string",
+                "description": "Идентификатор акции",
+                "format": "uuid"
+              },
+              "bankId": {
+                "type": "integer",
+                "description": "Идентификатор банка",
+                "format": "int64"
+              },
+              "depositId": {
+                "type": "integer",
+                "description": "Идентификатор вклада",
+                "format": "int64"
+              },
+              "bankEmail": {
+                "type": "string",
+                "description": "Email адрес банка"
+              },
+              "createdAt": {
+                "type": "string",
+                "description": "Дата создания",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "description": "Дата последнего обновления",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "PlatformDepositAttributesDto": {
+        "type": "object",
+        "description": "Атрибуты для акции на платформенные вклады",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AttributesDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "promotionId": {
+                "type": "string",
+                "description": "Идентификатор акции",
+                "format": "uuid"
+              },
+              "bankId": {
+                "type": "integer",
+                "description": "Идентификатор банка",
+                "format": "int64"
+              },
+              "depositId": {
+                "type": "integer",
+                "description": "Идентификатор вклада",
+                "format": "int64"
+              },
+              "promptMd": {
+                "type": "string",
+                "description": "Подсказка для клиента в формате markdown"
+              },
+              "customersType": {
+                "type": "string",
+                "description": "Тип клиента",
+                "enum": [
+                  "ALL",
+                  "NEW"
+                ]
+              },
+              "currency": {
+                "type": "string",
+                "description": "Валюта",
+                "enum": [
+                  "RUB"
+                ]
+              },
+              "amountMin": {
+                "type": "integer",
+                "description": "Минимальная сумма вклада",
+                "format": "int32"
+              },
+              "amountMax": {
+                "type": "integer",
+                "description": "Максимальная сумма вклада",
+                "format": "int32"
+              },
+              "termMin": {
+                "type": "integer",
+                "description": "Минимальный срок вклада",
+                "format": "int32"
+              },
+              "termMax": {
+                "type": "integer",
+                "description": "Максимальный срок вклада",
+                "format": "int32"
+              },
+              "rateMin": {
+                "type": "number",
+                "description": "Минимальная ставка",
+                "format": "float"
+              },
+              "rateMax": {
+                "type": "number",
+                "description": "Максимальная ставка",
+                "format": "float"
+              },
+              "activeDaysMinTerm": {
+                "type": "integer",
+                "description": "Количество дней сколько вклад должен быть открытым для выплаты бонуса",
+                "format": "int32"
+              },
+              "bonusCalcMethod": {
+                "type": "string",
+                "description": "Способ расчёта бонуса",
+                "enum": [
+                  "FIXED",
+                  "PERCENT",
+                  "DYNAMIC_PERCENT",
+                  "STEPPED"
+                ]
+              },
+              "bonusCalcFirstParam": {
+                "type": "integer",
+                "description": "Первый параметр для расчёта бонуса",
+                "format": "int32"
+              },
+              "bonusCalcSecondParam": {
+                "type": "integer",
+                "description": "Второй параметр для расчёта бонуса",
+                "format": "int32"
+              },
+              "bonusMaxAmount": {
+                "type": "number",
+                "description": "Максимальная сумма бонуса"
+              },
+              "conditionForPay": {
+                "type": "string",
+                "description": "Условия для выплаты бонуса",
+                "enum": [
+                  "PLAN_CLOSING",
+                  "ACTIVE_DAY"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "description": "Дата создания",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "description": "Дата последнего обновления",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "PromotionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Идентификатор",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "description": "Тип акции",
+            "enum": [
+              "PROMO_CODE",
+              "REFERRAL"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Название акции"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Дата начала",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Дата окончания",
+            "format": "date-time"
+          },
+          "generationStartDate": {
+            "type": "string",
+            "description": "Дата старта генерации кода",
+            "format": "date-time"
+          },
+          "generationEndDate": {
+            "type": "string",
+            "description": "Дата окончания генерации кода",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "description": "Статус",
+            "enum": [
+              "ACTIVE",
+              "NOT_ACTIVE"
+            ]
+          },
+          "productType": {
+            "type": "string",
+            "description": "Тип продукта",
+            "enum": [
+              "PLATFORM_DEPOSIT",
+              "EXTERNAL_DEPOSIT",
+              "PLATFORM_INSURANCE",
+              "CREDIT"
+            ]
+          },
+          "codeType": {
+            "type": "string",
+            "description": "Тип промокода",
+            "enum": [
+              "SINGLE",
+              "MULTIPLE_GENERATED",
+              "MULTIPLE_PRELOADED",
+              "EXTERNAL_GENERATED",
+              "PARTNER_CLICK"
+            ]
+          },
+          "codeMask": {
+            "type": "string",
+            "description": "Маска генерации для промокода"
+          },
+          "code": {
+            "type": "string",
+            "description": "Промокод"
+          },
+          "externalCode": {
+            "type": "string",
+            "description": "Ключевое слово для связи с DMN"
+          },
+          "codeLimit": {
+            "type": "integer",
+            "description": "Лимит на число применений промокода",
+            "format": "int32"
+          },
+          "codeAppliedCount": {
+            "type": "integer",
+            "description": "Количество уже примененных промокодов",
+            "format": "int32"
+          },
+          "codeExpirationInDays": {
+            "type": "integer",
+            "description": "Время жизни промокода",
+            "format": "int32"
+          },
+          "rulesUrl": {
+            "type": "string",
+            "description": "Ссылка на правила акции"
+          },
+          "promotionName": {
+            "type": "string",
+            "description": "Название промоакции"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Дата создания",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Дата последнего обновления",
+            "format": "date-time"
+          },
+          "reestrCodeName": {
+            "type": "string",
+            "description": "Название реестра промоакции"
+          },
+          "attributes": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CreditAttributesDto"
+              },
+              {
+                "$ref": "#/components/schemas/ExternalDepositAttributesDto"
+              },
+              {
+                "$ref": "#/components/schemas/PlatformDepositAttributesDto"
+              }
+            ]
+          },
+          "smsTemplate": {
+            "type": "string",
+            "description": "Код шаблона СМС"
+          }
+        },
+        "description": "Акция"
+      },
+      "Data": {
+        "type": "object",
+        "properties": {
+          "registry": {
+            "type": "array",
+            "xml": {
+              "name": "Registry"
+            },
+            "items": {
+              "$ref": "#/components/schemas/RegistryRecord"
+            }
+          }
+        },
+        "xml": {
+          "name": "Data"
+        }
+      },
+      "RegistryRecord": {
+        "required": [
+          "bonusType",
+          "dateBirth",
+          "grossAmount",
+          "inn",
+          "insuranceNumber",
+          "middleName",
+          "name",
+          "netPayment",
+          "passport",
+          "passportDate",
+          "passportPlace",
+          "reestrDate",
+          "reestrNumber",
+          "surname",
+          "taxWithheld",
+          "unitNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "reestrNumber": {
+            "type": "string",
+            "xml": {
+              "name": "ReestrNumber"
+            }
+          },
+          "reestrDate": {
+            "type": "string",
+            "format": "date-time",
+            "xml": {
+              "name": "ReestrDate"
+            }
+          },
+          "unitNumber": {
+            "type": "string",
+            "xml": {
+              "name": "UnitNumber"
+            }
+          },
+          "bonusType": {
+            "type": "string",
+            "xml": {
+              "name": "BonusType"
+            }
+          },
+          "surname": {
+            "type": "string",
+            "xml": {
+              "name": "Surname"
+            }
+          },
+          "name": {
+            "type": "string",
+            "xml": {
+              "name": "Name"
+            }
+          },
+          "middleName": {
+            "type": "string",
+            "xml": {
+              "name": "MiddleName"
+            }
+          },
+          "dateBirth": {
+            "type": "string",
+            "xml": {
+              "name": "DateBirth"
+            }
+          },
+          "passport": {
+            "type": "string",
+            "xml": {
+              "name": "Passport"
+            }
+          },
+          "passportDate": {
+            "type": "string",
+            "xml": {
+              "name": "PassportDate"
+            }
+          },
+          "passportPlace": {
+            "type": "string",
+            "xml": {
+              "name": "PassportPlace"
+            }
+          },
+          "inn": {
+            "type": "string",
+            "xml": {
+              "name": "INN"
+            }
+          },
+          "insuranceNumber": {
+            "type": "string",
+            "xml": {
+              "name": "InsuranceNumber"
+            }
+          },
+          "grossAmount": {
+            "type": "string",
+            "xml": {
+              "name": "gross_amount"
+            }
+          },
+          "taxWithheld": {
+            "type": "string",
+            "xml": {
+              "name": "tax_withheld"
+            }
+          },
+          "netPayment": {
+            "type": "string",
+            "xml": {
+              "name": "net_payment"
+            }
+          },
+          "customerid": {
+            "type": "string",
+            "xml": {
+              "name": "CUSTOMERID"
+            }
+          },
+          "codeid": {
+            "type": "string",
+            "xml": {
+              "name": "CODEID"
+            }
+          },
+          "promotionid": {
+            "type": "string",
+            "xml": {
+              "name": "PROMOTIONID"
+            }
+          },
+          "datepromocode": {
+            "type": "string",
+            "format": "date-time",
+            "xml": {
+              "name": "DATEPROMOCODE"
+            }
+          },
+          "contractid": {
+            "type": "string",
+            "xml": {
+              "name": "CONTRACTID"
+            }
+          }
+        }
+      },
+      "RegistryProcessingResponse": {
+        "required": [
+          "registryId"
+        ],
+        "type": "object",
+        "properties": {
+          "registryId": {
+            "type": "string",
+            "description": "Идентификатор реестра в БД сервиса",
+            "format": "uuid",
+            "example": "628c4262-d1a0-4ae0-8076-fe744eae3588"
+          }
+        },
+        "description": "Результат обработки реестра"
+      },
+      "PromotionCreationRequestDtoV2": {
+        "required": [
+          "codeType",
+          "endDate",
+          "productType",
+          "startDate",
+          "status",
+          "title",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Тип акции",
+            "enum": [
+              "PROMO_CODE",
+              "REFERRAL"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Название акции"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Дата начала",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Дата окончания",
+            "format": "date-time"
+          },
+          "generationStartDate": {
+            "type": "string",
+            "description": "Дата старта генерации кода",
+            "format": "date-time"
+          },
+          "generationEndDate": {
+            "type": "string",
+            "description": "Дата окончания генерации кода",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "description": "Статус",
+            "enum": [
+              "ACTIVE",
+              "NOT_ACTIVE"
+            ]
+          },
+          "productType": {
+            "type": "string",
+            "description": "Тип продукта",
+            "enum": [
+              "PLATFORM_DEPOSIT",
+              "EXTERNAL_DEPOSIT",
+              "PLATFORM_INSURANCE",
+              "CREDIT"
+            ]
+          },
+          "codeType": {
+            "type": "string",
+            "description": "Тип промокода",
+            "enum": [
+              "SINGLE",
+              "MULTIPLE_GENERATED",
+              "MULTIPLE_PRELOADED",
+              "EXTERNAL_GENERATED",
+              "PARTNER_CLICK"
+            ]
+          },
+          "codeMask": {
+            "type": "string",
+            "description": "Маска генерации для промокода"
+          },
+          "code": {
+            "type": "string",
+            "description": "Промокод"
+          },
+          "externalCode": {
+            "type": "string",
+            "description": "Ключевое слово для связи с DMN"
+          },
+          "codeAppliedCount": {
+            "type": "integer",
+            "description": "Количество уже примененных промокодов",
+            "format": "int32"
+          },
+          "codeExpirationInDays": {
+            "type": "integer",
+            "description": "Время жизни промокода",
+            "format": "int32"
+          },
+          "codeLimit": {
+            "type": "integer",
+            "description": "Лимит на число применений промокода",
+            "format": "int32"
+          },
+          "rulesUrl": {
+            "type": "string",
+            "description": "Ссылка на правила акции"
+          },
+          "promotionName": {
+            "type": "string",
+            "description": "Уникальное название промоакции"
+          },
+          "reestrCodeName": {
+            "type": "string",
+            "description": "Приказ"
+          },
+          "smsTemplate": {
+            "type": "string",
+            "description": "Код шаблона СМС"
+          },
+          "payoutType": {
+            "type": "string",
+            "description": "Тип выплаты",
+            "enum": [
+              "PROMOTIONAL_DEPOSITS_CREDIT",
+              "PROMOTIONAL_OSAGO",
+              "PROMOTIONAL_INSURANCE_EXCEPT_OSAGO",
+              "MARKETING_PROMOTIONAL_FOR_LIMITED_RANGE",
+              "CASH_COMPENSATION"
+            ]
+          },
+          "documentNumber": {
+            "type": "string",
+            "description": "Номер приказа"
+          },
+          "documentStartDate": {
+            "type": "string",
+            "description": "Дата начала приказа",
+            "format": "date"
+          },
+          "documentEndDate": {
+            "type": "string",
+            "description": "Дата окончания приказа",
+            "format": "date"
+          },
+          "documentUrl": {
+            "type": "string",
+            "description": "Ссылка на приказ"
+          },
+          "documentType": {
+            "type": "string",
+            "description": "Тип документа",
+            "enum": [
+              "ORDER",
+              "ADMINISTRATIVE_NOTE",
+              "RULES",
+              "OTHER"
+            ]
+          }
+        },
+        "description": "Запрос на создание промоакции"
+      },
+      "RegistryLoadResponse": {
+        "required": [
+          "id",
+          "loadDate",
+          "number",
+          "registryTotalAmount"
+        ],
+        "type": "object",
+        "properties": {
+          "loadDate": {
+            "type": "string",
+            "description": "Дата загрузки реестра",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "description": "ИД реестра",
+            "format": "uuid",
+            "example": "aa0d01f7-eedc-440e-a7d4-27b4ef2ca2c6"
+          },
+          "number": {
+            "type": "string",
+            "description": "Номер реестра",
+            "example": "20230216_ipot_str_15012023"
+          },
+          "registryTotalAmount": {
+            "type": "number",
+            "description": "Сумма реестра",
+            "example": 7587578.09
+          }
+        },
+        "description": "Результат загрузки реестра"
+      },
+      "PaymentDocumentDto": {
+        "required": [
+          "amount",
+          "docDate",
+          "docNumber",
+          "purpose",
+          "sender"
+        ],
+        "type": "object",
+        "properties": {
+          "docNumber": {
+            "type": "string",
+            "description": "Номер документа",
+            "example": "1234"
+          },
+          "docDate": {
+            "type": "string",
+            "description": "Дата документа",
+            "format": "date",
+            "example": "2021-05-12"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/SenderDto"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Сумма инвойса",
+            "example": 123.45
+          },
+          "purpose": {
+            "type": "string",
+            "description": "Назначение платежа",
+            "example": "По договору №123"
+          }
+        }
+      },
+      "SenderDto": {
+        "required": [
+          "account",
+          "bic",
+          "info",
+          "inn"
+        ],
+        "type": "object",
+        "properties": {
+          "inn": {
+            "type": "string",
+            "description": "ИНН",
+            "example": "7702077840"
+          },
+          "account": {
+            "type": "string",
+            "description": "Счет",
+            "example": "40701810000000000232"
+          },
+          "bic": {
+            "type": "string",
+            "description": "БИК",
+            "example": "044525505"
+          },
+          "info": {
+            "type": "string",
+            "description": "Наименование",
+            "example": "Публичное акционерное общество \"Московская Биржа ММВБ-РТС\""
+          }
+        },
+        "description": "Плательщик"
+      },
+      "CodeGenerationRequestDto": {
+        "type": "object",
+        "properties": {
+          "leadId": {
+            "type": "string",
+            "description": "Идентификатор лида",
+            "format": "uuid"
+          }
+        },
+        "description": "Информация для генерации и отправки промокода"
+      },
+      "PlatformInsuranceCodeValidationRequestDto": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Промокод"
+          }
+        },
+        "description": "Запрос на валидацию промокода для акции на страхование"
+      },
+      "PlatformInsuranceCodeValidationResponseDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "description": "Результат валидации промокода для акции на страхование"
+      },
+      "PlatformInsuranceAssignCodeRequestDto": {
+        "required": [
+          "code",
+          "orderId"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Промокод"
+          },
+          "orderId": {
+            "type": "string",
+            "description": "Id заявки на страхование",
+            "format": "uuid"
+          }
+        },
+        "description": "Запрос на привязку промокода к заявке"
+      },
+      "AssignCodeRequestDto": {
+        "required": [
+          "code",
+          "customerId",
+          "orderId"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Промокод"
+          },
+          "orderId": {
+            "type": "string",
+            "description": "Id заявки на открытие вклада",
+            "format": "uuid"
+          },
+          "customerId": {
+            "type": "string",
+            "description": "Id клиента",
+            "format": "uuid"
+          }
+        },
+        "description": "Запрос на привязку промокода к юзеру"
+      },
+      "AvailablePromotionBonusRequestDto": {
+        "required": [
+          "calculateBonusParams",
+          "customerId",
+          "eventType",
+          "productType"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "description": "Id пользователя",
+            "format": "uuid"
+          },
+          "productType": {
+            "type": "string",
+            "description": "Тип продукта",
+            "enum": [
+              "PLATFORM_DEPOSIT",
+              "EXTERNAL_DEPOSIT",
+              "PLATFORM_INSURANCE",
+              "CREDIT"
+            ]
+          },
+          "eventType": {
+            "type": "string",
+            "description": "Тип события",
+            "enum": [
+              "DEPOSIT_ACTIVATION",
+              "DEPOSIT_CLOSING",
+              "DEPOSIT_TERMINATION",
+              "BONUS_DEFERRED_STATE_TRANSITION_TRIGGER",
+              "REGISTRY_GENERATION",
+              "REGISTRY_PAID",
+              "BONUS_CANCELLED"
+            ]
+          },
+          "calculateBonusParams": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "description": "Параметры для расчета бонусов"
+            },
+            "description": "Параметры для расчета бонусов"
+          }
+        },
+        "description": "Запрос на расчет доступных бонусов"
+      },
+      "AvailablePromotionBonusDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "description": "Размер бонуса"
+          }
+        },
+        "description": "Бонус по акции"
+      },
+      "AvailablePromotionBonusInfoDto": {
+        "type": "object",
+        "properties": {
+          "promotionType": {
+            "type": "string",
+            "description": "Тип акции",
+            "enum": [
+              "PROMO_CODE",
+              "REFERRAL"
+            ]
+          },
+          "promptMd": {
+            "type": "string",
+            "description": "Подсказка для клиента"
+          },
+          "rulesUrl": {
+            "type": "string",
+            "description": "Ссылка на правила участия в акции"
+          },
+          "bonuses": {
+            "type": "array",
+            "description": "Список доступных бонусов по акции",
+            "items": {
+              "$ref": "#/components/schemas/AvailablePromotionBonusDto"
+            }
+          },
+          "additionalInfo": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "description": "Дополнительная информация об акции"
+            },
+            "description": "Дополнительная информация об акции"
+          }
+        },
+        "description": "Информация о доступных бонусах по акции"
+      },
+      "RegistryPaidEventDto": {
+        "required": [
+          "correlationId",
+          "customerId",
+          "idempotenceId",
+          "productType"
+        ],
+        "type": "object",
+        "properties": {
+          "idempotenceId": {
+            "type": "string",
+            "description": "Id идемпотентности"
+          },
+          "productType": {
+            "type": "string",
+            "description": "Тип продукта",
+            "enum": [
+              "PLATFORM_DEPOSIT",
+              "EXTERNAL_DEPOSIT",
+              "PLATFORM_INSURANCE",
+              "CREDIT"
+            ]
+          },
+          "customerId": {
+            "type": "string",
+            "description": "Id клиента",
+            "format": "uuid"
+          },
+          "correlationId": {
+            "type": "string",
+            "description": "Id корреляции"
+          }
+        },
+        "description": "Событие произведенной выплаты по реестру"
+      },
+      "RegistryGenerateEventDto": {
+        "required": [
+          "correlationId",
+          "customerId",
+          "idempotenceId",
+          "productType"
+        ],
+        "type": "object",
+        "properties": {
+          "idempotenceId": {
+            "type": "string",
+            "description": "Id идемпотентности"
+          },
+          "productType": {
+            "type": "string",
+            "description": "Тип продукта",
+            "enum": [
+              "PLATFORM_DEPOSIT",
+              "EXTERNAL_DEPOSIT",
+              "PLATFORM_INSURANCE",
+              "CREDIT"
+            ]
+          },
+          "customerId": {
+            "type": "string",
+            "description": "Id клиента",
+            "format": "uuid"
+          },
+          "correlationId": {
+            "type": "string",
+            "description": "Id корреляции"
+          }
+        },
+        "description": "Событие формирования реестра на выплату"
+      },
+      "ReferralLinkRequest": {
+        "type": "object",
+        "properties": {
+          "referralCode": {
+            "type": "string"
+          }
+        }
+      },
+      "ReferralLinkInfo": {
+        "type": "object",
+        "properties": {
+          "referralCode": {
+            "type": "string"
+          },
+          "parentCustomerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "linkCreationTimestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReferralCodeInfo": {
+        "type": "object",
+        "properties": {
+          "referralCode": {
+            "type": "string"
+          }
+        }
+      },
+      "PlatformDepositAttributesCreationRequestDto": {
+        "required": [
+          "customersType",
+          "promotionId",
+          "promptMd"
+        ],
+        "type": "object",
+        "properties": {
+          "promotionId": {
+            "type": "string",
+            "description": "Идентификатор акции",
+            "format": "uuid"
+          },
+          "bankId": {
+            "type": "integer",
+            "description": "Идентификатор банка-участника акции",
+            "format": "int64"
+          },
+          "depositId": {
+            "type": "integer",
+            "description": "Идентификатор вклада-участника акции",
+            "format": "int64"
+          },
+          "promptMd": {
+            "type": "string",
+            "description": "Подсказка для пользователя"
+          },
+          "customersType": {
+            "type": "string",
+            "description": "Тип клиента",
+            "enum": [
+              "ALL",
+              "NEW"
+            ]
+          },
+          "currency": {
+            "type": "string",
+            "description": "Валюта вклада",
+            "enum": [
+              "RUB"
+            ]
+          },
+          "amountMin": {
+            "type": "integer",
+            "description": "Минимальная сумма вклада",
+            "format": "int32"
+          },
+          "amountMax": {
+            "type": "integer",
+            "description": "Максимальная сумма вклада",
+            "format": "int32"
+          },
+          "termMin": {
+            "type": "integer",
+            "description": "Минимальный срок вклада",
+            "format": "int32"
+          },
+          "termMax": {
+            "type": "integer",
+            "description": "Максимальный срок вклада",
+            "format": "int32"
+          },
+          "rateMin": {
+            "type": "number",
+            "description": "Минимальная годовая процентная ставка вклада",
+            "format": "float"
+          },
+          "rateMax": {
+            "type": "number",
+            "description": "Максимальная годовая процентная ставка вклада",
+            "format": "float"
+          },
+          "activeDaysMinTerm": {
+            "type": "integer",
+            "description": "Количество дней сколько вклад должен быть открытым для выплаты бонуса",
+            "format": "int32"
+          },
+          "bonusCalcMethod": {
+            "type": "string",
+            "description": "Способ расчёта бонуса",
+            "enum": [
+              "FIXED",
+              "PERCENT",
+              "DYNAMIC_PERCENT",
+              "STEPPED"
+            ]
+          },
+          "bonusCalcFirstParam": {
+            "type": "integer",
+            "description": "Первое значение для расчёта бонуса",
+            "format": "int32"
+          },
+          "bonusCalcSecondParam": {
+            "type": "integer",
+            "description": "Второе значение для расчёта бонуса",
+            "format": "int32"
+          },
+          "bonusMaxAmount": {
+            "type": "number",
+            "description": "Максимальная сумма бонуса"
+          },
+          "conditionForPay": {
+            "type": "string",
+            "description": "Условия для выплаты бонуса",
+            "enum": [
+              "PLAN_CLOSING",
+              "ACTIVE_DAY"
+            ]
+          }
+        },
+        "description": "Запрос на создание аттрибутов для акции на платформенные вклады"
+      },
+      "ExternalDepositAttributesCreationRequestDto": {
+        "required": [
+          "bankEmail",
+          "bankId",
+          "promotionId"
+        ],
+        "type": "object",
+        "properties": {
+          "promotionId": {
+            "type": "string",
+            "description": "Идентификатор акции",
+            "format": "uuid"
+          },
+          "bankId": {
+            "type": "integer",
+            "description": "Идентификатор банка-участника акции",
+            "format": "int64"
+          },
+          "depositId": {
+            "type": "integer",
+            "description": "Идентификатор вклада-участника акции",
+            "format": "int64"
+          },
+          "bankEmail": {
+            "type": "string",
+            "description": "Email банка"
+          }
+        },
+        "description": "Запрос на создание аттрибутов для акции на неплатформенные вклады"
+      },
+      "CreditAttributesCreationRequestDto": {
+        "required": [
+          "bonusCalcMethod",
+          "customersType",
+          "promotionId"
+        ],
+        "type": "object",
+        "properties": {
+          "promotionId": {
+            "type": "string",
+            "description": "Идентификатор акции",
+            "format": "uuid"
+          },
+          "customersType": {
+            "type": "string",
+            "description": "Тип клиента",
+            "enum": [
+              "ALL",
+              "NEW"
+            ]
+          },
+          "bonusCalcMethod": {
+            "type": "string",
+            "description": "Способ расчёта бонуса",
+            "enum": [
+              "FIXED",
+              "PERCENT",
+              "DYNAMIC_PERCENT",
+              "STEPPED"
+            ]
+          },
+          "bonusAmount": {
+            "type": "number",
+            "description": "Максимальная сумма бонуса"
+          }
+        },
+        "description": "Запрос на создание аттрибутов для акции на кредитные продукты"
+      },
+      "PromotionCreationRequestDto": {
+        "required": [
+          "codeType",
+          "endDate",
+          "productType",
+          "startDate",
+          "status",
+          "title",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Тип акции",
+            "enum": [
+              "PROMO_CODE",
+              "REFERRAL"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Название акции"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "Дата начала",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Дата окончания",
+            "format": "date-time"
+          },
+          "generationStartDate": {
+            "type": "string",
+            "description": "Дата старта генерации кода",
+            "format": "date-time"
+          },
+          "generationEndDate": {
+            "type": "string",
+            "description": "Дата окончания генерации кода",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "description": "Статус",
+            "enum": [
+              "ACTIVE",
+              "NOT_ACTIVE"
+            ]
+          },
+          "productType": {
+            "type": "string",
+            "description": "Тип продукта",
+            "enum": [
+              "PLATFORM_DEPOSIT",
+              "EXTERNAL_DEPOSIT",
+              "PLATFORM_INSURANCE",
+              "CREDIT"
+            ]
+          },
+          "codeType": {
+            "type": "string",
+            "description": "Тип промокода",
+            "enum": [
+              "SINGLE",
+              "MULTIPLE_GENERATED",
+              "MULTIPLE_PRELOADED",
+              "EXTERNAL_GENERATED",
+              "PARTNER_CLICK"
+            ]
+          },
+          "codeMask": {
+            "type": "string",
+            "description": "Маска генерации для промокода"
+          },
+          "code": {
+            "type": "string",
+            "description": "Промокод"
+          },
+          "externalCode": {
+            "type": "string",
+            "description": "Ключевое слово для связи с DMN"
+          },
+          "codeAppliedCount": {
+            "type": "integer",
+            "description": "Количество уже примененных промокодов",
+            "format": "int32"
+          },
+          "codeExpirationInDays": {
+            "type": "integer",
+            "description": "Время жизни промокода",
+            "format": "int32"
+          },
+          "codeLimit": {
+            "type": "integer",
+            "description": "Лимит на число применений промокода",
+            "format": "int32"
+          },
+          "rulesUrl": {
+            "type": "string",
+            "description": "Ссылка на правила акции"
+          },
+          "promotionName": {
+            "type": "string",
+            "description": "Уникальное название промоакции"
+          },
+          "reestrCodeName": {
+            "type": "string",
+            "description": "Приказ"
+          },
+          "smsTemplate": {
+            "type": "string",
+            "description": "Код шаблона СМС"
+          }
+        },
+        "description": "Запрос на создание промоакции"
+      },
+      "PromotionEventConfig": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "DEPOSIT_ACTIVATION",
+              "DEPOSIT_CLOSING",
+              "DEPOSIT_TERMINATION",
+              "BONUS_DEFERRED_STATE_TRANSITION_TRIGGER",
+              "REGISTRY_GENERATION",
+              "REGISTRY_PAID",
+              "BONUS_CANCELLED"
+            ]
+          },
+          "stateTransition": {
+            "type": "string",
+            "enum": [
+              "INIT",
+              "CREATED_TO_CANCELLED",
+              "CREATED_TO_ACTIVATED",
+              "ACTIVATED_TO_PROCESSING",
+              "PROCESSING_TO_FINISHED",
+              "ACTIVATED_TO_CANCELLED",
+              "PROCESSING_TO_CANCELLED"
+            ]
+          },
+          "rules": {
+            "type": "string"
+          }
+        },
+        "description": "Конфигурация для реферальной акции"
+      },
+      "PromotionReferralWithConfigsDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PROMO_CODE",
+              "REFERRAL"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "PARENT",
+              "CHILD"
+            ]
+          },
+          "rulesUrl": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "NOT_ACTIVE"
+            ]
+          },
+          "productType": {
+            "type": "string",
+            "enum": [
+              "PLATFORM_DEPOSIT",
+              "EXTERNAL_DEPOSIT",
+              "PLATFORM_INSURANCE",
+              "CREDIT"
+            ]
+          },
+          "reestrCodeName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "eventConfigs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromotionEventConfig"
+            }
+          }
+        },
+        "description": "Реферальная акция"
+      },
+      "PlatformDepositOrderCodeResponseDto": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "description": "Id заявки на открытие вклада",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "description": "Промокод"
+          },
+          "status": {
+            "type": "string",
+            "description": "Статус промокода",
+            "enum": [
+              "CREATED",
+              "ASSIGNED",
+              "APPLIED",
+              "READY_FOR_PAY",
+              "PAY_IN_PROGRESS",
+              "PAID",
+              "CANCELLED",
+              "CANCELLED_DUE_TERMS_VIOLATION"
+            ]
+          }
+        },
+        "description": "Информация о промокоде для акции на платформенный вклад"
+      },
+      "ChildReferralsInfo": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "linkCreationTimestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReferralsInfo": {
+        "type": "object",
+        "properties": {
+          "referralCode": {
+            "type": "string"
+          },
+          "parentCustomerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "referrals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChildReferralsInfo"
+            }
+          }
+        }
+      },
+      "BonusDeferredStateTransition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stateTransition": {
+            "type": "string",
+            "enum": [
+              "INIT",
+              "CREATED_TO_CANCELLED",
+              "CREATED_TO_ACTIVATED",
+              "ACTIVATED_TO_PROCESSING",
+              "PROCESSING_TO_FINISHED",
+              "ACTIVATED_TO_CANCELLED",
+              "PROCESSING_TO_CANCELLED"
+            ]
+          },
+          "delayedUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "NEW",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "Информация об отложенном переходе"
+      },
+      "BonusWithDeferredStateTransitionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "CREATED",
+              "ACTIVATED",
+              "PROCESSING",
+              "CANCELLED",
+              "FINISHED"
+            ]
+          },
+          "promotionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "correlationId": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deferredStateTransitions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BonusDeferredStateTransition"
+            }
+          }
+        },
+        "description": "Бонус"
+      },
+      "BonusFullInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "CREATED",
+              "ACTIVATED",
+              "PROCESSING",
+              "CANCELLED",
+              "FINISHED"
+            ]
+          },
+          "correlationId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deferredStateTransitions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BonusDeferredStateTransition"
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BonusHistory"
+            }
+          }
+        },
+        "description": "Бонус"
+      },
+      "BonusHistory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "event": {
+            "$ref": "#/components/schemas/Event"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "CREATED",
+              "ACTIVATED",
+              "PROCESSING",
+              "CANCELLED",
+              "FINISHED"
+            ]
+          }
+        },
+        "description": "Запись истории бонуса"
+      },
+      "BonusSummaryDto": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "promotions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromotionReferralFullInfo"
+            }
+          }
+        },
+        "description": "Полная информация по промоакциям для пользователя"
+      },
+      "Event": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "DEPOSIT_ACTIVATION",
+              "DEPOSIT_CLOSING",
+              "DEPOSIT_TERMINATION",
+              "BONUS_DEFERRED_STATE_TRANSITION_TRIGGER",
+              "REGISTRY_GENERATION",
+              "REGISTRY_PAID",
+              "BONUS_CANCELLED"
+            ]
+          },
+          "eventTimestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "productType": {
+            "type": "string",
+            "enum": [
+              "PLATFORM_DEPOSIT",
+              "EXTERNAL_DEPOSIT",
+              "PLATFORM_INSURANCE",
+              "CREDIT"
+            ]
+          },
+          "correlationId": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            }
+          }
+        },
+        "description": "Запись события"
+      },
+      "PromotionReferralFullInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PROMO_CODE",
+              "REFERRAL"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "PARENT",
+              "CHILD"
+            ]
+          },
+          "rulesUrl": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "NOT_ACTIVE"
+            ]
+          },
+          "productType": {
+            "type": "string",
+            "enum": [
+              "PLATFORM_DEPOSIT",
+              "EXTERNAL_DEPOSIT",
+              "PLATFORM_INSURANCE",
+              "CREDIT"
+            ]
+          },
+          "reestrCodeName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bonuses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BonusFullInfo"
+            }
+          }
+        },
+        "description": "Информация по промоакциям"
+      },
+      "BonusWithHistoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "event": {
+            "$ref": "#/components/schemas/Event"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "CREATED",
+              "ACTIVATED",
+              "PROCESSING",
+              "CANCELLED",
+              "FINISHED"
+            ]
+          }
+        },
+        "description": "Запись истории бонуса"
+      },
+      "SearchResultPromotionDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "description": "Номер страницы, начиная с 0",
+            "format": "int32",
+            "example": 0
+          },
+          "size": {
+            "type": "integer",
+            "description": "Запрошенный размер страницы",
+            "format": "int32",
+            "example": 100
+          },
+          "total": {
+            "type": "integer",
+            "description": "Общее количество элементов, удовлетворяющих параметрам запроса",
+            "format": "int64",
+            "example": 1
+          },
+          "content": {
+            "type": "array",
+            "description": "Найденные сущности",
+            "items": {
+              "$ref": "#/components/schemas/PromotionDto"
+            }
+          }
+        },
+        "description": "Результат поискового запроса"
+      },
+      "CodeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Идентификатор промокода",
+            "format": "uuid"
+          },
+          "promotionId": {
+            "type": "string",
+            "description": "Идентификатор акции",
+            "format": "uuid"
+          },
+          "leadId": {
+            "type": "string",
+            "description": "Идентификатор лида",
+            "format": "uuid"
+          },
+          "customerId": {
+            "type": "string",
+            "description": "Идентификатор клиента",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "description": "Промокод"
+          },
+          "status": {
+            "type": "string",
+            "description": "Статус промокода",
+            "enum": [
+              "CREATED",
+              "ASSIGNED",
+              "APPLIED",
+              "READY_FOR_PAY",
+              "PAY_IN_PROGRESS",
+              "PAID",
+              "CANCELLED",
+              "CANCELLED_DUE_TERMS_VIOLATION"
+            ]
+          },
+          "orderId": {
+            "type": "string",
+            "description": "Статус промокода",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Дата создания",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Дата обновления",
+            "format": "date-time"
+          },
+          "bonusAmount": {
+            "type": "number",
+            "description": "Размер бонуса"
+          },
+          "bonusCalcFirstParam": {
+            "type": "integer",
+            "description": "Параметр для расчта бонуса",
+            "format": "int32"
+          }
+        },
+        "description": "Промокод"
+      },
+      "RegistryResponseDto": {
+        "type": "object",
+        "properties": {
+          "registry": {
+            "title": "registry",
+            "type": "object",
+            "required": [
+              "id",
+              "number",
+              "records"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "description": "ИД Записи реестра в БД pl-bonuses (UUID)",
+                "type": "string"
+              },
+              "number": {
+                "description": "Номер или ИД реестра. Необходим при загрузке реестра из внешней системы. При генерации на стороне pl-bonuses = UUID",
+                "type": "string"
+              },
+              "records": {
+                "title": "records",
+                "description": "Массив записей реестра на выплату",
+                "type": "array",
+                "items": {
+                  "amount": {
+                    "description": "Сумма выплаты",
+                    "type": "number"
+                  },
+                  "id": {
+                    "description": "ИД записи реестра",
+                    "type": "string"
+                  },
+                  "codeId": {
+                    "description": "ИД промокода",
+                    "type": "string"
+                  },
+                  "datePromocode": {
+                    "description": "Дата промокода",
+                    "type": "string"
+                  },
+                  "promotion": {
+                    "title": "promotion",
+                    "description": "Описание акции",
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "description": "ИД акции",
+                        "type": "string"
+                      },
+                      "title": {
+                        "description": "Полное наименование акции",
+                        "type": "string"
+                      },
+                      "startDate": {
+                        "description": "Дата старта акции",
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "endDate": {
+                        "description": "Дата завершения акции",
+                        "type": "string"
+                      },
+                      "order": {
+                        "title": "order",
+                        "description": "Массив приказов по акции",
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "number": {
+                              "description": "Номер приказа",
+                              "type": "string"
+                            },
+                            "startDate": {
+                              "description": "Дата приказа",
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "endDate": {
+                              "description": "Дата окончания действия приказа",
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "url": {
+                              "description": "Ссылка на приказ",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "number",
+                            "startDate",
+                            "endDate",
+                            "url"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "startDate",
+                      "endDate",
+                      "order"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "contractId": {
+                    "description": "ИД договора",
+                    "type": "string"
+                  },
+                  "createAt": {
+                    "description": "Дата и время создания записи",
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "bonusType": {
+                    "description": "Тип бонуса",
+                    "type": "string"
+                  },
+                  "depositExpDate": {
+                    "description": "Срок действия депозита(под удаление)",
+                    "type": "string"
+                  },
+                  "payoutType": {
+                    "type": "object",
+                    "description": "Тип выплаты",
+                    "enum": [
+                      "PROMOTIONAL_DEPOSITS_CREDIT",
+                      "PROMOTIONAL_OSAGO",
+                      "PROMOTIONAL_INSURANCE_EXCEPT_OSAGO",
+                      "MARKETING_PROMOTIONAL_FOR_LIMITED_RANGE",
+                      "CASH_COMPENSATION"
+                    ]
+                  },
+                  "customer": {
+                    "type": "object",
+                    "description": "Информация о клиенте",
+                    "properties": {
+                      "id": {
+                        "description": "ИД клиента (CRAML)",
+                        "type": "string"
+                      },
+                      "lastName": {
+                        "description": "Фамилия",
+                        "type": "string"
+                      },
+                      "firstName": {
+                        "description": "Имя",
+                        "type": "string"
+                      },
+                      "middlename": {
+                        "description": "Отчество",
+                        "type": "string"
+                      },
+                      "identifityDocument": {
+                        "title": "identifityDocument",
+                        "description": "Документ удостоверяющий личность",
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "description": "Тип документа",
+                            "type": "string"
+                          },
+                          "number": {
+                            "description": "серия и номер",
+                            "type": "string"
+                          },
+                          "date": {
+                            "description": "Дата выдачи",
+                            "type": "string"
+                          },
+                          "plase": {
+                            "description": "Место выдачи",
+                            "type": "string"
+                          },
+                          "code": {
+                            "description": "Код подразделения",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "number",
+                          "date",
+                          "plase",
+                          "code"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "inn": {
+                        "description": "ИНН",
+                        "type": "string"
+                      },
+                      "birthDate": {
+                        "description": "Дата рождения",
+                        "type": "string"
+                      },
+                      "sex": {
+                        "description": "Пол",
+                        "type": "string"
+                      },
+                      "email": {
+                        "description": "Электронная почта",
+                        "type": "string"
+                      },
+                      "phone": {
+                        "description": "Номер телефона",
+                        "type": "string"
+                      },
+                      "snils": {
+                        "description": "СНИЛС",
+                        "type": "string"
+                      },
+                      "citizenship": {
+                        "description": "Гражданство",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "identifityDocument",
+                      "inn",
+                      "birthDate",
+                      "sex",
+                      "email",
+                      "phone",
+                      "snils",
+                      "citizenship"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "amount",
+                  "id",
+                  "codeId",
+                  "datePromocode",
+                  "promotion",
+                  "contractId",
+                  "createAt",
+                  "bonusType",
+                  "depositExpDate",
+                  "payoutType",
+                  "customer"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "required": [
+          "registry",
+          "signatures"
+        ]
+      },
+      "SearchResultCodeDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "description": "Номер страницы, начиная с 0",
+            "format": "int32",
+            "example": 0
+          },
+          "size": {
+            "type": "integer",
+            "description": "Запрошенный размер страницы",
+            "format": "int32",
+            "example": 100
+          },
+          "total": {
+            "type": "integer",
+            "description": "Общее количество элементов, удовлетворяющих параметрам запроса",
+            "format": "int64",
+            "example": 1
+          },
+          "content": {
+            "type": "array",
+            "description": "Найденные сущности",
+            "items": {
+              "$ref": "#/components/schemas/CodeDto"
+            }
+          }
+        },
+        "description": "Результат поискового запроса"
+      }
+    }
+  }
+}

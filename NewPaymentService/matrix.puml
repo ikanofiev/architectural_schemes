@@ -1,0 +1,22 @@
+@startuml
+entity  displaced_promotion {
+id
+product
+promotion_type
+product_type
+
+}
+entity displacing_promotion {
+id
+product
+promotion_type
+product_type
+}
+
+entity displacement_matrix {
+
+}
+
+
+
+@enduml

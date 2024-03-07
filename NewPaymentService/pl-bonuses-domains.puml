@@ -1,0 +1,193 @@
+@startuml
+hide circle
+skinparam linetype ortho
+
+
+
+
+namespace RegistryDomain {
+entity registry_document{}
+
+entity registry_document_history{
+
+}
+
+
+entity registry_document_record{
+}
+
+
+
+entity registry_document_record_history{
+
+}
+
+
+}
+
+namespace PromocodesDomain {
+
+entity promotion_promocode_based {
+  }
+
+entity code_generation_templates {
+ }
+
+entity promocodes {
+   }
+entity promocodes_usage_log {
+}
+
+}
+
+
+namespace PromotionsDomain {
+
+entity promotions {
+}
+
+entity dmn_templates {
+}
+
+entity dmn_templates_product_type_links {
+}
+
+
+entity promotion_use {
+}
+
+
+entity promotion_limits {
+}
+
+entity promotion_limits_event_log {
+}
+
+entity promotion_limits_periods {
+}
+
+entity promotion_limits_periods_event_log {
+}
+
+entity promotion_event_configs {
+ }
+
+entity promotions_audit{
+}
+
+entity product_type {
+}
+
+entity external_documents{
+
+}
+entity tmp_documents{
+}
+
+}
+
+namespace BonusDomain {
+entity bonuses {}
+entity bonuses_history {}
+entity bonuses_deferred_state_transitions {}
+entity events_history {}
+entity events {}
+}
+
+
+
+
+namespace PromotionReferrals {
+entity promotion_referrals {}
+}
+
+
+
+
+entity orders{
+
+
+}
+
+
+namespace ExternalPartnersPromocodesDomain {
+
+entity external_partners_promotion_promocode_based {
+}
+entity external_partners_promocodes {
+ }
+entity external_partners_promocodes_usage_log {
+}
+
+
+}
+
+namespace LoyaltyCardDomain {
+
+entity loyalty_cards
+
+entity loyalty_cards_usage_log
+
+
+}
+
+namespace PartnersDomain {
+    entity partners
+}
+
+
+
+partners |o-[bold,#red]-|| loyalty_cards
+partners |o-[bold,#red]-|| promocodes
+partners |o-[bold,#red]-|| external_partners_promotion_promocode_based
+
+dmn_templates |o-[bold,#blue]-|| dmn_templates_product_type_links
+dmn_templates_product_type_links ||-[bold,#blue]-|| product_type
+promotion_event_configs }o-[bold,#blue]-o| dmn_templates
+
+registry_document ||-[bold,#blue]-o{ registry_document_record
+registry_document ||-[bold,#blue]-o{ registry_document_history
+registry_document_record ||-[bold,#blue]-o{ registry_document_record_history
+registry_document_record ||-[bold,#red]-o{ bonuses
+registry_document ||-[bold,#red]-|| orders
+external_documents ||-[bold,#blue]-o{ promotions
+external_documents }o-[bold,#red]-|| registry_document
+
+
+tmp_documents||-[bold,#red]-||orders
+tmp_documents||-[bold,#blue]-||external_documents
+promotions_audit }o-[bold,#blue]-||promotions
+
+
+promotions ||-[bold,#red]-o| promotion_referrals
+promotions ||-[bold,#blue]-o{ promotion_limits
+promotion_limits ||-[bold,#blue]-o{ promotion_use
+promotion_use ||-[bold,#red]-o{ registry_document
+promotions ||-[bold,#red]-o| promotion_promocode_based
+promotions ||-[bold,#red]-o| external_partners_promotion_promocode_based
+promotions ||-[bold,#red]-o| loyalty_cards
+external_partners_promotion_promocode_based ||-[bold,#blue]-o{ external_partners_promocodes
+external_partners_promocodes ||-[bold,#blue]-o{ external_partners_promocodes_usage_log
+promotion_promocode_based ||-[bold,#blue]-o{ code_generation_templates
+
+
+loyalty_cards ||-[bold,#blue]-o{ loyalty_cards_usage_log
+events ||-[bold,#red]-o| loyalty_cards_usage_log
+events ||-[bold,#blue]-o{ events_history
+
+
+promotion_promocode_based ||-[bold,#blue]-o{ promocodes
+promocodes ||-[bold,#blue]-o{ promocodes_usage_log
+
+promotion_limits ||-[bold,#blue]-o{ promotion_limits_event_log
+promotion_limits ||-[bold,#blue]-o{ promotion_limits_periods
+promotion_limits ||-[bold,#blue]-o{ promotion_limits_periods_event_log
+
+
+events ||-[bold,#red]-o| promocodes_usage_log
+promotions ||-[bold,#blue]-o{ promotion_event_configs
+promotions ||-[bold,#red]-o{ bonuses
+bonuses ||-[bold,#blue]-|{ bonuses_history
+bonuses ||-[bold,#blue]-o{ bonuses_deferred_state_transitions
+events ||-[bold,#blue]-o{ bonuses_history
+@enduml
