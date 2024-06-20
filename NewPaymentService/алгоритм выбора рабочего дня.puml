@@ -1,0 +1,19 @@
+@startuml
+start
+:Запрос рабочего времени НРД;
+:В таблице nsd_working_time_exclude_day\nпроверяем наличие БЛИЖАЙШЕЙ\nдаты в заданном периоде;
+if (Запись найдена) then
+:Возвращаем параметры\nдаты и времени\nиз таблицы\nnsd_working_time_exclude_day;
+stop
+else
+:По таблице calendar_dictionary\nпроверяем наличие ближайшего\nрабочего дня в заданном периоде;
+:По таблице calendar_dictionary\nопределяем предшествовали ли\nвыходные дни и их количество;
+if (Ближайшему рабочему\nдню предшествовало\nдва и более выходных дней) then
+:Возвращаем дату рабочего\nдня и время из таблицы\nnsd_working_time с типом\nSTART_AFTER_TWO_WEEKEND\nи\nis_active = true;
+stop
+else
+:Возвращаем дату рабочего\nдня и время из таблицы\nnsd_working_time с типом\nSTART_AFTER_ONE_WEEKEND\nи\nis_active = true;
+stop
+endif
+
+@enduml

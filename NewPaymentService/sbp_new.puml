@@ -1,0 +1,70 @@
+@startuml
+== Атомарные камты ==
+NSD -> hub++ : callback
+hub -> hub : Есть ли camt054
+alt Есть
+    hub -> hub : обогащение данными колбека
+else НЕТ
+    hub -> hub : m2m проверка
+    alt проверка пройдена
+        hub -> hub : match_with_customer
+    else
+        hub -> hub : undecinded
+    end
+end
+
+NSD -> hub : camt054
+hub -> hub : Есть ли callback
+alt Есть
+    hub -> hub : обогащение данными camt054
+    alt status = undecinded
+        hub -> hub : create full_refund_order
+    end
+else НЕТ
+    hub -> hub : m2m проверка
+    alt проверка пройдена
+        hub -> hub : match_with_customer
+    else
+        hub -> hub : undecinded
+        hub -> hub : create full_refund_order
+    end
+end
+
+== camt054 агрегированный ==
+
+NSD -> hub++ : callback
+hub -> hub : Есть ли запись сформированная по реестру camt054
+alt Есть
+    hub -> hub : обогащение данными колбека
+else НЕТ
+    hub -> hub : m2m проверка
+    alt проверка пройдена
+        hub -> hub : match_with_customer
+    else
+        hub -> hub : undecinded
+    end
+end
+
+NSD -> hub : camt054 + реестр
+hub -> hub : увеличение баланса НС
+hub -> hub : обработка реестра
+loop
+alt Есть  callback
+    alt status = undecinded
+        hub -> hub : create full_refund_order
+    else
+        hub -> hub : увеличиваем баланс реестра бенефициаров
+    end
+else НЕТ
+    hub -> hub : генерация колбека по данным реестра
+    hub -> hub : m2m проверка
+    alt проверка пройдена
+        hub -> hub : match_with_customer
+    else
+        hub -> hub : undecinded
+        hub -> hub : create full_refund_order
+    end
+end
+end
+
+@enduml

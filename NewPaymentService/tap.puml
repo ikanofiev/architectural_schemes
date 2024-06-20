@@ -1,0 +1,63 @@
+@startuml
+participant nsd as "НРД"
+
+participant tap as "pl-int-emergency-tap"
+participant hub as "pl-payment-hub"
+participant onyx as "pl-int-onyx"
+participant monitoring as "Система мониторинга"
+
+== Открытие операционного дня ==
+
+nsd -> nsd++ : Запускает операционный день.
+nsd -> tap++ : OperationDayStart
+nsd-> nsd : X - сообщений или t - времени.
+nsd -> tap: Остановка обмена
+tap -> hub++ : Запрос метрик
+return
+alt Метрики не выходят за границы аварии
+    tap -> nsd++ : Запуск обмена
+    nsd-> nsd : Запуск обмена
+    return
+    tap -> tap : статус обмена - запущен.
+else
+    tap -> monitoring : Ошибка.
+end
+
+== Возникновение ошибок на стороне НРД ==
+
+nsd -> nsd : Срабатывание внутренних механизмов мониторинга.
+nsd -> tap : tapClosed
+tap -> tap : Изменить статус обмена
+tap -> hub : Приостановить исходящий поток
+opt
+    tap -> onyx : остановить обмены
+end
+
+nsd -> nsd : Система восстановлена
+nsd -> tap : tapOpen
+tap -> tap : Изменение статуса обмена
+tap -> hub++ : Запуск обмена
+opt
+    tap -> onyx : Возобновить обмены
+end
+tap -> hub : check metrics
+alt Метрики не выходят за границы аварии
+
+    tap -> monitoring : Ошибок нет.
+else
+  tap -> nsd++ : tapClosed
+    nsd-> nsd : Остановка обмена
+    return
+    tap -> tap : статус обмена - остановлен.
+    tap -> monitoring : Ошибка.
+end
+
+== Возникновение ошибок на стороне платформы ==
+
+monitoring -> tap : Ошибки по платежам
+tap -> hub : Приостановить исходящий трафик
+tap -> nsd : tapClosed
+opt
+    tap -> onyx : Приостановить обмены
+end
+@enduml

@@ -1,0 +1,22 @@
+@startuml
+participant "pl-billing Процессинг" as proc
+participant "pl-billing ДБ" as bill
+participant DWH
+participant ..
+loop scheduler once at 30 days
+    bill++
+    bill -> DWH++ : GET получить исходные данные. API на стороне DWH.
+    DWH -> DWH : Подготовка исходных данных.
+    return
+    bill -> proc++ : Запустить процедуру расчета
+    group Процедура расчета
+        proc -> dict : Запрос данных по партнерам.
+        proc -> bill++ : Запрос тарифов
+        return
+        proc -> proc : Расчет сумм
+
+    end group
+
+end loop
+
+@enduml

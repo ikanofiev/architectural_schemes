@@ -1,4 +1,5 @@
 @startuml
+skinparam linetype ortho
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
  LAYOUT_WITH_LEGEND()
  LAYOUT_LANDSCAPE()
@@ -20,6 +21,8 @@
  }
 System(1c,"1C Биллинг"){
 }
+System(signer,"Криптосервис"){
+}
 System(ui,"ЦУФ"){
 }
 System_Ext(mail,"Почтовый сервер"){
@@ -33,15 +36,15 @@ ContainerDb(DWH, "DWH"){
 
 BiRel(DWH, db, "Исходные данные для расчета","REST")
 Rel(report, db, "Выгрузка реестров для партнеров")
+BiRel(report, signer,"Подписание реестра", REST)
+
 Rel(report, 1c,"Выгрузка реестра", REST)
-Rel_L(report, dictionary,"Запрос данных о партнерах", REST)
+Rel(report, dictionary,"Запрос данных о партнерах", REST)
 Rel(bill, dictionary,"Запрос данных о партнерах", REST)
 BiRel(ui,back,"Управление настройками тарифов. Добавление партнеров.")
 BiRel(back,db,"Изменение\добавление\управление")
-BiRel_D(ui,report,"Запрос\nвыгрузки\nотчетности")
-BiRel(bill,db,"Инициация загрузки в БД исходных данных.")
-BiRel(bill,bill,"Расчет начислений.")
-Rel(bill, db, "Сохранение в БД результатов расчета")
+BiRel(ui,report,"Запрос\nвыгрузки\nотчетности")
+BiRel(bill,db,"")
 Rel(report, mail, "Выгрузка реестра в PDF", email)
 
  @enduml

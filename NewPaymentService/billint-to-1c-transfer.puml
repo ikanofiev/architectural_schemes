@@ -1,0 +1,17 @@
+@startuml
+actor user
+participant "pl-billing" as bill
+participant "Криптосервис" as crypt
+participant "1С.Биллниг" as 1c
+
+user -> bill++ : Подтверждение реестра на выгрузку.
+bill -> bill : Формирование XML документа. Сохранение в БД сервиса.
+bill -> crypt++ : REST API подписание XML строки
+return : XML строка, подпись, сертификат.
+bill -> bill : сохранение дополнительных данных в БД сервиса, смена статуса.
+bill -> 1c++ : SOAP запрос загрузки документа в "1С.Биллниг"
+return : подтверждение успешной загрузки.
+bill -> bill : Изменение статуса
+
+
+@enduml

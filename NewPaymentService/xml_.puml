@@ -1,0 +1,51 @@
+@startuml
+hide circle
+
+
+
+entity  partners_registry {
+* id	uuid
+* registry_number	string
+* status	varchar
+* amount	numeric(19,2)
+* checkout_start_date	date
+* checkout_finish_date	date
+* partner_id	uuid
+* mapping_table_id	uuid	FK
+* tariff_id	bigint	FK
+* billing_service_id	uuid	FK
+* created_by	varchar
+* create_timestamp	date
+update_timestamp	date
+updated_by	varchar
+* is_active	bool
+
+}
+
+
+
+entity exchange_registry_table{
+* id	UUID
+* create_date	Date-time
+* xml_data	xmldata
+* sign_data bytea
+* sign_cert	bytea
+* status	string
+* update_at	date time
+* registry_number	string
+
+}
+
+entity exchange_registry_table_history{
+* id	UUID
+* exchange_registry_table_id	UUID
+* status	string
+* login	string
+  comment	string
+* create_date	date_time
+}
+
+exchange_registry_table::id ||--o{ exchange_registry_table_history::exchange_registry_table_id
+exchange_registry_table::registry_number ||--o{ partners_registry::registry_number
+
+@enduml

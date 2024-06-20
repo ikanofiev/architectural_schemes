@@ -1,89 +1,18 @@
-@startuml
-skinparam linetype ortho
-namespace Registry {
-entity registry_document {
-Реестр документ
-==
-* id : uuid
-==
-* payment_document_id : uuid
-==
-* number : string
-* date
-* create_timestamp : date_time
-* update_timestamp : date_time
-* status : enum
-== Страничный режим ==
-    complited : boolean Признак что получены ВСЕ страницу
-    total_pages : int
+@startjson
+{
+"array":[
+{
+"item":"value",
+"item2":"value2"
 }
-entity registry_history {
-История операций по реестру
-==
-* id : uuid
-==
-* registry_document_id : uuid
-* registry_document_records_id : uuid
-* registry_document_status : enum
-* registry_document_records_status : enum
-* create_timestamp : date_time
-}
+],
+"array2":[
+"d1",
+"d2"]
+,
+"includes":{
+"i1":"dd",
+"i2":2
+}}
 
-
-entity registry_document_records {
-Реестр. Записи.
-==
-* id : uuid
-==
-* registry_document_id : uuid
-* customer_id : uuid
-* amount : number
-* currency : enum
-* turnovers_client_account_id : uuid
-* create_timestamp : date_time
-* update_timestamp : date_time
-* status : enum
-  optionalKeys : jsonb
-
-  == Страничный режим ==
-  page_id : uuid
-}
-
-entity registry_refund {
-Реестр. Возврат излишков.
-==
-* id : uuid
-==
-* payment_document_id : uuid
-==
-* registry_document_id : uuid
-* amount : number
-* currency : enum
-* create_timestamp : date_time
-* update_timestamp : date_time
-* status : enum
-
-
-
-}
-
-
-entity registry_page {
-id : uuid ИД страницы
-registry_document_id : ИД документа реестра
-number : int
-last_page : boolean
-
-}
-}
-
-registry_document ||--o{ registry_history #blue
-registry_document ||--o{ registry_document_records #blue
-registry_document ||--o{ registry_refund #blue
-registry_document_records ||--o{ registry_history #blue
-
-registry_page  }o--|| registry_document
-registry_document_records  }o--|| registry_page
-
-
-@enduml
+@endjson

@@ -1,0 +1,10 @@
+@startuml
+hide circle
+
+partners_registry}o--o{deposit_payment_event
+partners_registry}o--o{credit_payment_event
+partners_registry}o--o{physical_identification_payment_event
+
+
+
+@enduml

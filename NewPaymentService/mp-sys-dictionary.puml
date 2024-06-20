@@ -1,0 +1,28 @@
+@startuml
+skinparam linetype ortho
+
+entity nsd_working_time  {
+Время работы НРД.
+==
+* id : uuid
+==
+* time : time
+* type : string(START_AFTER_ONE_WEEKEND, START_AFTER_TWO_WEEKEND, END)
+* is_active : boolean
+* create_timestamp : date_time
+* update_timestamp : date_time
+}
+
+entity nsd_working_time_exclude_days {
+Даты с НЕСТАНДАРТНЫМ временем начала рабочего дня НРД
+==
+* id : uuid
+==
+* date : date
+* time_start : time
+* time_end : time
+* create_timestamp : date_time
+}
+
+
+@enduml

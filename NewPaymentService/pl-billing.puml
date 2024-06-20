@@ -1,3 +1,6 @@
+
+
+
 @startuml
 hide circle
 skinparam linetype ortho
@@ -73,56 +76,8 @@ entity registry_document_record_history{
 }
 
 
-namespace events_domain {
-entity events {
-    id: uuid
-    --
-    idempotence_id: text
-    event_timestamp: datetime
-    type: enum
-    product_type: enum(platform_deposits | external_deposits)
-    customerId: uuid
-    correlationId: text
-    params: jsonb
-}
 
-entity events_history {
-* **id** : uuid
-* [PK] **event_id** : uuid
---
-Надо придумать набор столбцов для логирования жизненного цикла события
-}
-
-
-}
-
-
-
-
-entity service_card_event_configs {
-    **id**: UUID
-    --
-    * promotion_id: UUID
-    * event_type: text
-    * state_transition: enum
-    * status : enum (NEW, ACTIVE, UNDER_REVISION, CANCELLED)
-    rules: binary
-    dmn_templates_id : UUID
-    description : text
-}
-
-
-entity service_card {
-== Карточка услуги ==
-* id
-
-
-}
-
-entity tariffs {
-* id :
-* params
-}
+namespace accruals_nm {
 
 
 entity accruals {
@@ -157,7 +112,7 @@ entity accruals_deferred_state_transitions {
   * **created_timestump**: timestamp
   * **updated_timestump**: timestamp
 }
-
+}
 
 
 
@@ -175,7 +130,168 @@ entity partners {
 * updateDateTime
 }
 
+entity bank_mapping {
+
+* 	id int8		:			ID используемый в DWH
+* 	inn varchar(12)		:			ИНН
+* 	created_by varchar		:			Кем создана запись
+* 	create_date timestamptz		:			Когда создана запись
+* 	updated_by varchar		:			Кем обновлена запись
+* 	update_date timestamptz		:			Когда обновлена запись
 
 
+}
+
+
+entity product_type  {
+* 	id	uuid	Первичный ключ
+* 	name	varchar	Наименование продукта
+	comment	varchar	Комментарий
+* 	is_active	bool	Флаг активности продукта
+* 	create_timestamp	timestamptz	Дата создания записи
+* 	created_by	varchar	Кем создана запись
+	update_timestamp	timestamptz	Дата обновления записи
+	updated_by	varchar	Кем обновлена запись
+
+}
+
+namespace tariffs {
+
+entity tariff {
+* 	id	int8	ID тарифа
+* 	name	varchar	Наименование тарифа
+* 	start_date	date	Дата начала действия тарифа
+	finish_date	date	Дата окончания действия тарифа
+* 	create_date	timestamptz	Дата создания записи
+* 	created_by	varchar	Автор создания записи
+* 	update_date	timestamptz	Дата изменения записи
+* 	updated_by	varchar	Автор последних изменений
+* 	eff_dttm	timestamptz	Дата и время начала действия технической версии записи
+	exp_dttm	timestamptz	Дата и время окончания действия технической версии записи
+	row_hash	varchar	Хэш строки
+	load_cdttm	timestamptz	Дата и время вставки строки
+	load_dttm	timestamptz	Дата и время изменения записи
+	process_task_id	int8	Номер процесса
+	deleted_ind	int8	Признак удаления записи
+	actual_ind	int8	Признак актуальной записи
+}
+
+entity tariff_bank_map{
+* 	id	int8	ID записи
+* 	bank_id	int8	ID банка
+* 	tariff_id	int8	ID тарифа
+* 	start_date	date	Дата начала действия тарифа
+	finish_date	date	Дата окончания действия тарифа
+	product_id	varchar	ID продукта
+	product_option_id	varchar	Опция
+* 	create_date	timestamptz	Дата создания записи
+* 	created_by	varchar	Автор создания записи
+* 	update_date	timestamptz	Дата изменения записи
+* 	updated_by	varchar	Автор последних изменений
+* 	eff_dttm	timestamptz	Дата и время начала действия технической версии записи
+	exp_dttm	timestamptz	Дата и время окончания действия технической версии записи
+	row_hash	varchar	Хэш строки
+	load_cdttm	timestamptz	Дата и время вставки строки
+	load_dttm	timestamptz	Дата и время изменения записи
+	process_task_id	int8	Номер процесса
+	deleted_ind	int8	Признак удаления записи
+	actual_ind	int8	Признак актуальной записи
+
+}
+
+entity tariff_deposit_rating_criteria{
+* 	criteria_id	int8	ID критерии
+	term_from	int8	Плановый срок депозита От
+	term_to	int8	Плановый срок депозита До
+	amount_from	int8	Фактическая сумма депозита От
+	amount_from_incl	int8	Фактическая сумма депозита От включает саму себя
+	amount_to	int8	Фактическая сумма депозита До
+	amount_to_incl	int8	Фактическая сумма депозита До включает саму себя
+* 	create_date	timestamptz	Дата создания записи
+* 	created_by	varchar	Автор создания записи
+* 	update_date	timestamptz	Дата изменения записи
+* 	updated_by	varchar	Автор последних изменений
+* 	eff_dttm	timestamptz	Дата и время начала действия технической версии записи
+	exp_dttm	timestamptz	Дата и время окончания действия технической версии записи
+	row_hash	varchar	Хэш строки
+	load_cdttm	timestamptz	Дата и время вставки строки
+	load_dttm	timestamptz	Дата и время изменения записи
+	process_task_id	int8	Номер процесса
+	deleted_ind	int8	Признак удаления записи
+	actual_ind	int8	Признак актуальной записи
+
+}
+
+entity tariff_rate{
+* 	id	int8	ID записи
+* 	tariff_id	int8	ID тарифа
+* 	service_id	varchar	ID услуги
+	criteria_id	int8	ID критерия
+* 	value	int8	Значение ставки
+* 	unit	varchar	Единицы измерения
+* 	create_date	timestamptz	Дата создания записи
+* 	created_by	varchar	Автор создания записи
+* 	update_date	timestamptz	Дата изменения записи
+* 	updated_by	varchar	Автор последних изменений
+* 	eff_dttm	timestamptz	Дата и время начала действия технической версии записи
+	exp_dttm	timestamptz	Дата и время окончания действия технической версии записи
+	row_hash	varchar	Хэш строки
+	load_cdttm	timestamptz	Дата и время вставки строки
+	load_dttm	timestamptz	Дата и время изменения записи
+	process_task_id	int8	Номер процесса
+	deleted_ind	int8	Признак удаления записи
+	actual_ind	int8	Признак актуальной записи
+
+}
+entity tariff_rating_criteria{
+* 	id	int8	ID услуги
+* 	tariff_id	int8	ID тарифа
+* 	service_id	varchar	ID услуги
+* 	name	varchar	Наименование тарифа
+* 	create_date	timestamptz	Дата создания записи
+* 	created_by	varchar	Автор создания записи
+* 	update_date	timestamptz	Дата изменения записи
+* 	updated_by	varchar	Автор последних изменений
+* 	eff_dttm	timestamptz	Дата и время начала действия технической версии записи
+	exp_dttm	timestamptz	Дата и время окончания действия технической версии записи
+	row_hash	varchar	Хэш строки
+	load_cdttm	timestamptz	Дата и время вставки строки
+	load_dttm	timestamptz	Дата и время изменения записи
+	process_task_id	int8	Номер процесса
+	deleted_ind	int8	Признак удаления записи
+	actual_ind	int8	Признак актуальной записи
+
+}
+entity tariff_service{
+*	id	varchar	ID услуги
+	general_name	varchar	Обобщённое наименование услуги
+*	name	varchar	Наименование услуги
+*	create_date	timestamptz	Дата создания записи
+*	created_by	varchar	Автор создания записи
+*	update_date	timestamptz	Дата изменения записи
+*	updated_by	varchar	Автор последних изменений
+*	eff_dttm	timestamptz	Дата и время начала действия технической версии записи
+	exp_dttm	timestamptz	Дата и время окончания действия технической версии записи
+	row_hash	varchar	Хэш строки
+	load_cdttm	timestamptz	Дата и время вставки строки
+	load_dttm	timestamptz	Дата и время изменения записи
+	process_task_id	int8	Номер процесса
+	deleted_ind	int8	Признак удаления записи
+	actual_ind	int8	Признак актуальной записи
+
+}
+}
+
+tariff_bank_map ||--|| bank_mapping
+tariff_bank_map ||--|| tariff
+tariff ||--|| tariff_rating_criteria
+tariff ||--|| tariff_rate
+tariff_rate ||--|| tariff_deposit_rating_criteria
+
+registry_document ||--o{ registry_document_history
+registry_document ||--o{ registry_document_record
+registry_document_record ||--o{ registry_document_record_history
+
+accruals ||--o{ accruals_history
 
 @enduml
