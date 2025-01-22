@@ -1,0 +1,57 @@
+@startuml
+actor "Задача по расписанию\nпользователь" as user
+participant "Сверочный модуль" as sverka
+participant "Продукты" as prod
+participant "mp-sys-rft" as transport
+
+user -> sverka++ : Инициация сверки (на вход период)
+sverka -> prod++ : Получение данных о сделках за период
+return
+sverka -> transport++ : Поиск отчетов о сделках
+return
+sverka -> sverka : Обработка результатов сверки\nформирование отчетного файла
+sverka --> user : Отправка результатов сверки\nв виде Excel документа\nна электронную почту
+
+
+
+
+ @enduml
+ === контроль отправка
+ actor "Инициатор события" as int
+ participant "Продукты" as prod
+ participant "mp-sys-rft" as transport
+ participant "РФТ" as rft
+ participant monitoring
+
+ int -> prod++ : Событие (открытие депозита)
+ prod -> prod++ : Обработка\валидации
+ prod --> transport++ : Событие в топик rft-report (отчет)
+ transport -> transport : Валидации
+ alt Ошибка валидации
+     transport --> prod : Ошибка регистрации события (status = FAIL)
+ else
+     transport --> prod : Событие взято в обработку (status = DRAFT)
+     transport --> rft++ : отправка анкеты в РФТ
+     rft->rft : Обработка
+     alt Ошибка регистрации анкеты в РФТ
+         rft --> transport : FAIL
+         transport -> transport : Сохранение статуса
+         transport --> prod : FAIL
+         alt Допустима повторная отправка события
+             prod -> transport : Событие в топик rft-report (отчет) retry
+         end
+         prod -> prod : Обработка ошибочного статуса
+         prod -> monitoring : Событие в мониторинг. Уведомление ответственных.
+
+     else Успешная регистрация в РФТ
+         rft --> transport : SUCCESS
+         transport -> transport : Сохранение статуса
+         transport --> prod : SUCCESS
+         rft--
+         prod -> prod : Сохранение статуса.\nУстановка признака\nуспешно доставлено в РФТ
+         prod--
+     end
+     prod--
+     transport--
+ end
+

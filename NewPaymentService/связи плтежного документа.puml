@@ -1,0 +1,23 @@
+@startuml
+'https://plantuml.com/use-case-diagram
+skinparam linetype ortho
+
+entity "incoming_payment_document_psbr"
+entity "incoming_payment_document_psbr_history"
+entity invoice_income
+entity full_refund_order
+entity wallet_incoming
+entity incoming_sbp_registry_payment_document_psbr
+entity client_account_transaction
+
+incoming_payment_document_psbr ||--|| core_account_transaction
+incoming_payment_document_psbr ||--|| wallet_incoming
+incoming_payment_document_psbr ||--|| full_refund_order
+incoming_payment_document_psbr ||--|| invoice_income
+incoming_payment_document_psbr ||--|| incoming_payment_document_psbr_history
+incoming_payment_document_psbr ||--|| incoming_sbp_registry_payment_document_psbr
+wallet_incoming||--||client_account_transaction
+
+@enduml
+
+,

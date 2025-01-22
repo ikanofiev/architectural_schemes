@@ -1,0 +1,92 @@
+@startuml db
+
+entity contract {
+	* **contract_id**
+	--
+	* type
+	* customer_id
+	* rft_id
+    --
+    *created_at
+    *updated_at
+ }
+
+entity Report {
+	* **id**
+	--
+	* **parent_id** <<FK>>
+	--
+	* contract_id <<FK>>
+	* operation_id
+	* report_type
+    * operation_type
+	* event_data
+    * status
+    * retry_count
+    * fail_reason
+    * report_date
+    --
+    * created_at
+	* updated_at
+    * execute_at: (Depricated)
+ 	last_try_sent_at
+ 	success_received_at
+ }
+
+entity contract_task {
+	* id
+    * **contract_id**
+	--
+	* status
+    *execute_at
+ }
+
+ entity statement_report {
+ * **id**:	uuid Идентификатор записи
+ statement_report_xml_id :	oid	Ссылка на бинарное представление отчета в таблице pg_largeobject
+ * status:	varchar	Статус записи
+ * login:	varchar	Логин загрузившего отчет
+ * role:	varchar	Роль загрузившего отчет
+ * create_timestamp: Дата и время создания записи
+}
+
+entity statement_rquest_log {
+* **id** uuid Идентификатор записи
+* obj_xml varchar Файл, отправляемый в РФТ
+* status varchar Статус записи
+login varchar Логин запросившего выписку
+roles varchar Роли запросившего выписку
+* period_from date Период с
+* period_to date Период до
+* document_type varchar Тип отчёта
+* create_timestamp timestamptz Дата и время создания записи
+
+}
+
+entity statement_document {
+* **id** : uuid
+* statement_report_id : uuid
+* created_at : dateTime
+}
+
+entity statement_document_record {
+* **id** : uuid
+*	**report_id**	int8	Идентификатор отчета
+* **statement_document_id** uuid
+*	contract_id	varchar(52)	Идентификатор договора
+*	operation_type	varchar	Тип операции для конкретного продукта
+*	operation_id	varchar	Идентификатор операции из mp-sys-customer-contract
+*	report_data	text Выборка данных из отчета.
+	created_at	timestamptz	Дата и время создания записи
+	updated_at	timestamptz	Дата и время обновления записи
+	report_date	date	Дата формирования отчета
+
+}
+
+Report }-left-|| contract
+Report ||-left-|| Report
+contract ||-right-|| contract_task
+statement_document_record }-left-|| statement_document
+statement_document ||--|| statement_report
+
+@enduml

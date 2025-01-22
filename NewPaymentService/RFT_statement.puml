@@ -1,0 +1,77 @@
+@startuml
+
+skinparam wrapWidth 300
+
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+ LAYOUT_WITH_LEGEND()
+ LAYOUT_LANDSCAPE()
+
+ title
+  Механизмы контроля отправки информации о сделках в РФТ
+  end title
+
+ System_Boundary(mp-sys-rft, "Адаптер РФТ") {
+  Container(dep,"Продуктовый модуль сборки отчета")
+  Container(report,"Транспортный модуль")
+  }
+
+System(product,"Произвольный продукт"){
+}
+
+
+
+System_Ext(rft,"РФТ(контур НКО НРД)"){
+}
+
+Rel_R(product, dep, "1. Событие о сделке")
+Rel_U(dep,report, "2. XML  объект")
+
+BiRel_U(report, rft, "3. XML пакет для РФТ\n4. Подтверждение регистрации или ошибка регистрации пакета")
+
+Rel(report, product, "5. Статус обработки события")
+
+ @enduml
+
+BiRel(DWH, db, "Исходные данные для расчета","REST")
+Rel(report, db, "Выгрузка реестров для партнеров")
+BiRel(report, signer,"Подписание реестра", REST)
+
+Rel(report, 1c,"Выгрузка реестра", REST)
+Rel(report, dictionary,"Запрос данных о партнерах", REST)
+Rel(bill, dictionary,"Запрос данных о партнерах", REST)
+BiRel(ui,back,"Управление настройками тарифов. Добавление партнеров.")
+BiRel(back,db,"Изменение\добавление\управление")
+BiRel(ui,report,"Запрос\nвыгрузки\nотчетности")
+BiRel(bill,db,"")
+Rel(report, mail, "Выгрузка реестра в PDF", email)
+
+
+
+ Rel(feedback, response_queue, "Сохраняет", "kafka")
+   Rel(vk_publsher, response_queue, "Потребляет", "kafka")
+  Rel(ok_publsher, response_queue, "Потребляет", "kafka")
+   Rel(operator, feedback, "Отвечает на сообщение", "Внутренний REST API")
+
+ System_Ext(amo, "AMO CRM", "Просмотр заявок и отправка ответов")
+  System_Ext(email, "Email")
+  Person_Ext(amo_operator, "Оператор AMO CRM")
+
+  Rel(amo_operator, amo, "Отвечает на заявки")
+  Rel(amo, email, "Отправка сообщений на Email")
+  Rel_U(amo, amo_adapter, "Отправка сообщений в ОК и ВК")
+
+
+Rel_L(vk_publsher, ok_official_api, "Публикация", "HTTP")
+ Rel_L(ok_publsher, ok_mobile, "Публикация", "HTTP")
+
+ Person(operator, "Оператор")
+
+
+ System_Boundary(ok, "Одноклассники") {
+   System_Ext(ok_mobile, "Мобильный сайт")
+ }
+
+ System_Boundary(vk, "Вконтакте") {
+   System_Ext(ok_official_api, "Официальный API")
+ }

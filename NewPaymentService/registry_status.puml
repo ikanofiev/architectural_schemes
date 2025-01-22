@@ -1,25 +1,20 @@
 @startuml
-skinparam linetype ortho
-NEW  --> WAITING_FOR_1C
-WAITING_FOR_1C --> ACCEPTED_1C
-WAITING_FOR_1C --> VALIDATION_FAILED
-VALIDATION_FAILED --> WAITING_FOR_1C
-ACCEPTED_1C --> RECEIVED_1C
-RECEIVED_1C --> OEBS
-OEBS --> CREATE_ORDER
-CREATE_ORDER --> NOT_ENOUGH_MONEY
-NOT_ENOUGH_MONEY-->PAYMENT_CREATED
-CREATE_ORDER -->PAYMENT_CREATED
-PAYMENT_CREATED-->ORDER_COMPLETED
-ORDER_COMPLETED--> WAITING_FOR_PAYMENT
-
-VALIDATION_FAILED --> CANCELED
-WAITING_FOR_PAYMENT --> PROCESSING
-PROCESSING --> PROCESSED
-PROCESSING --> WAITING_FOR_REFUND
-WAITING_FOR_REFUND -->  REFUND
-WAITING_FOR_REFUND --> PROCESSED
-REFUND#green -->  REFUND_FAIL
-REFUND -->  PROCESSED
-REFUND_FAIL#green -->  WAITING_FOR_REFUND#green
+(*) --> [Устанавливается\nпри записи реестра] NEW
+NEW --> [Устанавливается\nпосле первичной\nвалидации реестра] WAITING_FOR_PAYMENT
+NEW -> [Валидация\nреестра\nне пройдена] VALIDATION_FAILED
+WAITING_FOR_PAYMENT --> [Реестр\nвзят в работу. ] PROCESSING
+PROCESSING --> [Успешно обработан.\nСредства зачислены\n на кошелек.] PROCESSED
+PROCESSING --> [Успешно обработан,\nно есть остаток\nдля возврата в АСВ.\nОжидаем информации\nдля возврата] WAITING_FOR_REFUND
+PROCESSING --> [Успешно обработан,\nно есть остаток\nдля уплаты налогов\nОжидаем подтверждение\nоплаты налога] WAITING_FOR_TAX_PAID
+WAITING_FOR_TAX_PAID#green-->[Платеж в налоговую\n подтвержден в НРД] TAX_PROCESSED
+TAX_PROCESSED#green --> PROCESSED
+WAITING_FOR_PAYMENT --> [Отклонен.\nПлатежный документ\nполучен, но\nесть ошибки.] VALIDATION_FAILED
+WAITING_FOR_PAYMENT --> [В течении\nтрех дней\nне получен\nПД по реестру] ARCHIVED
+WAITING_FOR_REFUND --> [Получен запрос\nна возврат.\nВыполняем.] REFUND
+REFUND -> [Ошибка Возврата] REFUND_FAILED
+REFUND --> [Успешный возврат] PROCESSED
+REFUND_FAILED --> [Сообщение о ошибке\nвозврата передано\nв систему источник.\nОжидаем информацию\nдля возврата.] WAITING_FOR_REFUND
+PROCESSED --> (*)
+VALIDATION_FAILED -> (*)
+ARCHIVED --> (*)
 @enduml

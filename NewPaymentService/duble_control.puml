@@ -1,0 +1,73 @@
+@startuml
+hide circle
+skinparam linetype ortho
+
+
+entity application{
+== Заявка ==
+id
+type_id
+
+status
+
+
+..
+
+
+}
+
+entity documents
+{
+id
+application_id
+...id
+}
+
+entity decisions
+{
+id
+application_id
+params: jsonb
+status :
+
+
+}
+entity comments{
+id
+application_id
+comment
+login
+}
+entity application_history
+{
+id
+application_id
+login
+role
+status
+..
+}
+
+entity types{
+== Справочник типов ==
+id:
+name : ["Наследнику на внешний счет", "Наследнику на кошелек", "Начислить бонус" ...  ]
+params_for_form :
+url : "/api/v1/wallets/frozen-withdrawal-order/?" - Обсудить с Печниковым
+url_body :
+
+..
+}
+
+decisions }o--|| application
+documents }o--|| application
+application_history}o--|| application
+comments }o--|| application
+types ||--|| application
+
+
+@enduml
+
+contacts }o--|| person
+documents }o--|| person
+product_links }o--|| person

@@ -1,0 +1,56 @@
+@startuml
+actor "Инициатор события" as int
+participant "Продукты" as prod
+participant "mp-sys-rft" as transport
+participant "РФТ" as rft
+participant monitoring
+
+int -> prod++ : Событие (открытие депозита)
+prod -> prod++ : Обработка\валидации
+prod --> transport++ : Событие в топик rft-report
+transport -> transport : Валидации
+alt Ошибка валидации
+    transport --> prod : Ошибка регистрации события (status = REJECT)
+else
+    transport --> prod : Событие взято в обработку (status = DRAFT)
+    transport --> rft++ : отправка анкеты в РФТ
+    rft->rft : Обработка
+    alt Ошибка регистрации анкеты в РФТ
+        rft --> transport : FAIL
+        transport -> transport : Сохранение статуса
+        transport --> prod : FAIL
+        prod -> prod : Обработка ошибочного статуса
+        prod -> monitoring : alert
+
+    else
+        rft --> transport : SUCCESS
+        transport -> transport : Сохранение статуса
+        transport --> prod : SUCCESS
+        rft--
+        prod -> prod : Сохранение статуса.\nУстановка признака\nуспешно доставлено в РФТ
+        prod--
+    end
+    prod--
+    transport--
+
+end
+
+
+
+@enduml
+
+loop scheduler once at 30 days
+    bill++
+    bill -> DWH++ : GET получить исходные данные. API на стороне DWH.
+    DWH -> DWH : Подготовка исходных данных.
+    return
+    bill -> proc++ : Запустить процедуру расчета
+    group Процедура расчета
+        proc -> dict : Запрос данных по партнерам.
+        proc -> bill++ : Запрос тарифов
+        return
+        proc -> proc : Расчет сумм
+
+    end group
+
+end loop
